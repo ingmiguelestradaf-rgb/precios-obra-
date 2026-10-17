@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1d2328">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Precios de Obra MX</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky search band on top, tabbed result list below; ficha-de-cotización rows with mono figures */
+:root{
+  --bg:#eef0f1; --surface:#ffffff; --sunk:#e3e6e8; --line:#cdd2d6;
+  --fg:#1d2328; --muted:#5b656e; --accent:#e2a300; --accent-ink:#1d2328;
+  --link:#1f5f8b; --ok:#2e7d4f; --warn:#a86400; --bad:#b23b2e;
+  --chip-ok:#dcefe3; --chip-warn:#f6e6c8; --chip-bad:#f4dbd7;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#15191c; --surface:#1d2226; --sunk:#252b30; --line:#343c42;
+  --fg:#e6e9eb; --muted:#9aa4ac; --accent:#f0b520; --accent-ink:#15191c;
+  --link:#7fb6dc; --ok:#6cc28f; --warn:#e9b25a; --bad:#ec8b7e;
+  --chip-ok:#1f3a2a; --chip-warn:#3d3018; --chip-bad:#45241f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15191c; --surface:#1d2226; --sunk:#252b30; --line:#343c42;
+  --fg:#e6e9eb; --muted:#9aa4ac; --accent:#f0b520; --accent-ink:#15191c;
+  --link:#7fb6dc; --ok:#6cc28f; --warn:#e9b25a; --bad:#ec8b7e;
+  --chip-ok:#1f3a2a; --chip-warn:#3d3018; --chip-bad:#45241f; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+a{color:var(--link)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--fg)}
+
+/* top band */
+.band{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--fg);color:var(--bg)}
+.band .wrap{padding-block:14px 14px;display:grid;gap:10px}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand h1{font-family:var(--f-display);font-weight:700;font-size:28px;letter-spacing:.02em;margin:0;text-transform:uppercase;line-height:1}
+.brand h1 span{color:var(--accent)}
+.fx{font-family:var(--f-mono);font-size:12.5px;display:flex;align-items:center;gap:6px;opacity:.9}
+.fx input{width:72px;font-family:var(--f-mono);font-size:12.5px;padding:3px 6px;border-radius:4px;border:1px solid #5b656e;background:transparent;color:inherit}
+.search{display:flex;gap:8px}
+.search input{flex:1;min-width:0;font:500 17px var(--f-body);padding:12px 14px;border-radius:6px;border:2px solid transparent;background:var(--surface);color:var(--fg)}
+.search input:focus{border-color:var(--accent);outline:none}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.tabs button{flex:none;font:600 15px var(--f-display);letter-spacing:.06em;text-transform:uppercase;padding:7px 12px;border:0;border-radius:4px 4px 0 0;background:transparent;color:inherit;opacity:.65;cursor:pointer;border-bottom:3px solid transparent}
+.tabs button[aria-selected="true"]{opacity:1;border-bottom-color:var(--accent)}
+.tabs .n{font-family:var(--f-mono);font-size:11px;opacity:.7;margin-left:4px}
+
+main.wrap{padding-block:18px 48px;display:grid;gap:18px}
+.note{font-size:13px;color:var(--muted);max-width:75ch}
+.panel[hidden]{display:none}
+.panel{display:grid;gap:14px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.toolbar select,.toolbar label{font-size:13.5px}
+select,input,textarea{font-family:var(--f-body)}
+select,.field input,.field select,.field textarea{padding:7px 9px;border:1px solid var(--line);border-radius:5px;background:var(--surface);color:var(--fg);font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12.5px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+
+/* rows */
+.list{display:grid;gap:8px}
+.row{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px}
+.row h3{margin:0;font-size:15.5px;font-weight:600;line-height:1.3}
+.row .spec{font-size:13px;color:var(--muted)}
+.row .price{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:15.5px;font-weight:500;white-space:nowrap}
+.row .price small{display:block;font-size:11.5px;color:var(--muted);font-weight:400}
+.row .meta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--muted);align-items:center}
+.row .meta a{font-size:12px}
+.tag{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:var(--sunk);color:var(--fg)}
+.tag.ok{background:var(--chip-ok);color:var(--ok)}
+.tag.warn{background:var(--chip-warn);color:var(--warn)}
+.tag.bad{background:var(--chip-bad);color:var(--bad)}
+.tag.mine{background:var(--accent);color:var(--accent-ink)}
+.row .actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:600 13.5px var(--f-body);padding:7px 12px;border-radius:5px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.5;cursor:default}
+.empty{padding:28px 16px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:6px}
+
+/* ask claude */
+.ask{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:14px;display:grid;gap:10px}
+.ask h2,.section-h{font-family:var(--f-display);font-weight:600;font-size:20px;letter-spacing:.03em;text-transform:uppercase;margin:0}
+.ask .q{display:flex;gap:8px;flex-wrap:wrap}
+.ask textarea{flex:1 1 260px;min-width:0;min-height:44px;resize:vertical;padding:9px 11px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--fg);font-size:14.5px}
+.answer{white-space:pre-wrap;font-size:14.5px;max-width:80ch}
+.answer:empty{display:none}
+
+/* live links */
+.live{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;align-items:center}
+.live a{padding:5px 10px;border:1px solid var(--line);border-radius:4px;text-decoration:none;background:var(--surface)}
+
+/* calculator */
+.calc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:760px){.calc{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:10px;align-content:start}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:420px){.fields{grid-template-columns:minmax(0,1fr)}}
+.field{display:grid;gap:3px;font-size:12.5px;color:var(--muted)}
+.field input,.field select,.field textarea{width:100%;color:var(--fg)}
+.field.full{grid-column:1/-1}
+.ledger{width:100%;border-collapse:collapse;font-size:14px}
+.ledger td{padding:6px 0;border-bottom:1px solid var(--line)}
+.ledger td:last-child{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.ledger tr.total td{font-weight:600;border-bottom:0;padding-top:10px;font-size:16px}
+.verdict{padding:10px 12px;border-radius:5px;font-size:14px}
+.verdict.ok{background:var(--chip-ok);color:var(--ok)}
+.verdict.bad{background:var(--chip-bad);color:var(--bad)}
+.verdict.warn{background:var(--chip-warn);color:var(--warn)}
+.sources{font-size:12.5px;color:var(--muted)}
+.sources li{margin-block:3px}
+form.add{display:grid;gap:10px}
+.status{font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<style>
+.contact{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 16px;padding:10px 12px;background:var(--sunk);border-radius:5px;font-size:13px}
+.contact div{min-width:0;overflow-wrap:anywhere}
+.contact b{display:block;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.contact .tel{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.copy{font:500 11.5px var(--f-body);margin-left:6px;padding:1px 7px;border:1px solid var(--line);border-radius:3px;background:var(--surface);color:var(--fg);cursor:pointer}
+.std{display:flex;gap:4px;flex-wrap:wrap}
+.up{color:var(--bad)} .down{color:var(--ok)}
+.stamp{font-family:var(--f-mono);font-size:11.5px;opacity:.85}
+.sub-h{font-family:var(--f-display);font-weight:600;font-size:17px;letter-spacing:.04em;text-transform:uppercase;margin:6px 0 0;color:var(--muted)}
+.alert{background:var(--chip-warn);color:var(--warn);border-radius:6px;padding:10px 14px;font-size:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.alert button{margin-left:auto}
+</style>
+
+<style>body{margin:0}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}</style>
+</head>
+<body>
+<header class="band">
+  <div class="wrap">
+    <div class="brand">
+      <h1>Precios de <span>Obra</span> MX</h1>
+      <div class="fx"><span class="stamp" id="stamp"></span>
+        <label for="tc">USD/MXN</label><input id="tc" type="number" step="0.01" value="18.24" inputmode="decimal"></div>
+    </div>
+    <div class="search">
+      <input id="q" type="search" placeholder="Busca: varilla 3/8, block, cemento, tablaroca, Sika, elevador…" autocomplete="off" aria-label="Buscar material o proveedor">
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" id="t-mx" aria-selected="true" data-p="mx">México<span class="n" id="n-mx"></span></button>
+      <button role="tab" id="t-int" aria-selected="false" data-p="int">Importación<span class="n" id="n-int"></span></button>
+      <button role="tab" id="t-chg" aria-selected="false" data-p="chg">Cambios<span class="n" id="n-chg"></span></button>
+      <button role="tab" id="t-mine" aria-selected="false" data-p="mine">Mis cotizaciones<span class="n" id="n-mine"></span></button>
+      <button role="tab" id="t-calc" aria-selected="false" data-p="calc">Costo puesto</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="alert" id="newchg" hidden><span id="newchg-t"></span><button class="btn" id="newchg-b">Ver cambios</button></div>
+
+  <div class="live" id="live"></div>
+
+  <section class="panel" id="p-mx" role="tabpanel" aria-labelledby="t-mx">
+    <div class="toolbar">
+      <div class="chips" id="cats-mx"></div>
+      <label for="region">Ajuste a tu zona
+        <select id="region">
+          <option value="0">Sin ajuste</option>
+          <option value="5">+5 %</option>
+          <option value="10">+10 %</option>
+          <option value="15">+15 %</option>
+        </select>
+      </label>
+    </div>
+    <p class="note">Precios de referencia en pesos. Cada renglón dice su fuente y fecha. Varias fuentes promedian CDMX, Monterrey, Guadalajara y Querétaro; según la misma fuente el flete mueve el precio 5 a 15 % por región. Abajo están los proveedores formales que surten en Tijuana.</p>
+    <div class="list" id="list-mx"></div>
+    <h3 class="sub-h">Proveedores en Tijuana y México</h3>
+    <div class="list" id="list-mxp"></div>
+  </section>
+
+  <section class="panel" id="p-int" role="tabpanel" aria-labelledby="t-int" hidden>
+    <div class="toolbar">
+      <div class="chips" id="cats-int"></div>
+      <label for="trato">Tratado
+        <select id="trato">
+          <option value="">Todos</option>
+          <option value="tlc">Con tratado (arancel preferente)</option>
+          <option value="sin">Sin tratado (arancel 2026)</option>
+        </select>
+      </label>
+    </div>
+    <p class="note">Solo fabricantes formales y reconocidos que producen bajo normas de Estados Unidos (ASTM, UL) y Europa (EN, marcado CE). Para México pide siempre: certificado de fábrica por lote (en acero, Mill Test Certificate EN 10204 3.1), ISO 9001 vigente, certificado de origen y constancia de cumplimiento de la NOM aplicable (acero de construcción: NOM-251-SE-2025). Desde el 1 de enero de 2026 los países sin tratado pagan de 5 a 50 %; en acero, 50 %.</p>
+    <h3 class="sub-h">Precios internacionales de referencia</h3>
+    <div class="list" id="list-ref"></div>
+    <h3 class="sub-h">Fabricantes</h3>
+    <div class="list" id="list-int"></div>
+  </section>
+
+  <section class="panel" id="p-chg" role="tabpanel" aria-labelledby="t-chg" hidden>
+    <p class="note" id="chg-note">La app descarga cada vez que la abres la base que se revisa todos los días. Aquí verás qué precios subieron o bajaron desde tu última visita.</p>
+    <div class="list" id="list-chg"></div>
+  </section>
+
+  <section class="panel" id="p-mine" role="tabpanel" aria-labelledby="t-mine" hidden>
+    <div class="card">
+      <h2 class="section-h">Guardar una cotización</h2>
+      <p class="note" id="mine-status">Se guardan en este equipo y aparecen en tus búsquedas. Para pasarlas a otro equipo, respáldalas y cárgalas allá.</p>
+      <form class="add" id="addform">
+        <div class="fields">
+          <label class="field full">Material<input id="f-mat" required placeholder="Varilla 3/8 G42"></label>
+          <label class="field">Proveedor<input id="f-prov" placeholder="Nombre del proveedor"></label>
+          <label class="field">Ciudad<input id="f-city" placeholder="Tijuana"></label>
+          <label class="field">Precio<input id="f-price" type="number" step="0.01" required inputmode="decimal"></label>
+          <label class="field">Moneda<select id="f-cur"><option>MXN</option><option>USD</option></select></label>
+          <label class="field">Unidad<input id="f-unit" placeholder="ton, m³, pza, bulto" required></label>
+          <label class="field">Fecha<input id="f-date" type="date"></label>
+          <label class="field full">Notas<input id="f-notes" placeholder="Incluye flete a obra, vigencia 5 días, IVA incluido"></label>
+        </div>
+        <div class="toolbar"><button class="btn primary" id="f-save" type="submit">Guardar cotización</button><button class="btn" id="exp" type="button">Respaldar cotizaciones</button><label class="btn" for="imp">Cargar respaldo</label><input id="imp" type="file" accept=".json,application/json" hidden></div>
+      </form>
+    </div>
+    <div class="list" id="list-mine"></div>
+  </section>
+
+  <section class="panel" id="p-calc" role="tabpanel" aria-labelledby="t-calc" hidden>
+    <p class="note">Calcula cuánto te cuesta una tonelada importada ya en tu obra y compárala contra comprar en México. Flete y agente son valores de ejemplo: cámbialos por tus cotizaciones de naviera y agente aduanal.</p>
+    <div class="calc">
+      <div class="card">
+        <h2 class="section-h">Datos</h2>
+        <div class="fields">
+          <label class="field full">Precio de origen<select id="c-src"></select></label>
+          <label class="field">Precio FOB (USD/t)<input id="c-fob" type="number" step="1" inputmode="decimal"></label>
+          <label class="field">Flete internacional (USD/t)<input id="c-frt" type="number" step="1" value="45" inputmode="decimal"></label>
+          <label class="field">Seguro (% del FOB)<input id="c-ins" type="number" step="0.1" value="0.5" inputmode="decimal"></label>
+          <label class="field">Arancel IGI (%)<input id="c-igi" type="number" step="1" inputmode="decimal"></label>
+          <label class="field">DTA (%)<input id="c-dta" type="number" step="0.1" value="0.8" inputmode="decimal"></label>
+          <label class="field">Agente aduanal (% valor)<input id="c-agt" type="number" step="0.05" value="0.45" inputmode="decimal"></label>
+          <label class="field">Maniobras y flete a obra (MXN/t)<input id="c-loc" type="number" step="10" value="900" inputmode="decimal"></label>
+          <label class="field">Precio en México sin IVA (MXN/t)<input id="c-mx" type="number" step="10" inputmode="decimal"></label>
+        </div>
+        <p class="note" id="c-hint"></p>
+      </div>
+      <div class="card">
+        <h2 class="section-h">Costo puesto en obra</h2>
+        <table class="ledger" id="c-out"></table>
+        <div class="verdict" id="c-verdict"></div>
+        <p class="note">El IVA de importación (16 %) suele ser acreditable si facturas como empresa; por eso se compara sin IVA. Confirma con tu agente aduanal la fracción arancelaria, el padrón de importadores y si aplica padrón sectorial o aviso de siderúrgicos.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const TRATOS={
+  tmec:{lbl:"T-MEC",cls:"ok",igi:0,txt:"0 % con certificado de origen"},
+  ue:{lbl:"TLCUEM",cls:"ok",igi:0,txt:"Preferente vigente; acuerdo modernizado firmado el 22 may 2026, en ratificación"},
+  aelc:{lbl:"TLC AELC",cls:"ok",igi:0,txt:"Preferente con certificado de origen"},
+  jp:{lbl:"AAE Japón / CPTPP",cls:"ok",igi:0,txt:"Preferente con certificado de origen"},
+  cptpp:{lbl:"CPTPP",cls:"ok",igi:0,txt:"Preferente con certificado de origen"},
+  ap:{lbl:"Alianza del Pacífico",cls:"ok",igi:0,txt:"Preferente con certificado de origen"},
+  sin:{lbl:"Sin tratado",cls:"bad",igi:null,txt:"Arancel 2026: hasta 50 % en acero, 5 a 35 % en otros; verifica la fracción"}
+};
+const $=s=>document.querySelector(s);
+const norm=s=>(s||"").toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[”″]/g,'"');
+const SYN=[["varilla","rebar","acero de refuerzo","corrugada","fierro"],["block","bloque","blok"],["tablaroca","drywall","panel de yeso","yeso","tablayeso","gypsum"],["durock","tablacemento"],["cemento","cement","portland"],["concreto","hormigon","premezclado"],["viga","ipr","w beam","perfil","h beam","estructural"],["malla","electromalla","electrosoldada"],["tabique","ladrillo"],["vidrio","cristal","glass"],["aluminio","canceleria","ventana","fachada","muro cortina"],["impermeabilizante","impermeabilizacion"],["aditivo","acelerante","retardante"],["elevador","elevadores","ascensor"],["cable","cableado","conductor"],["aislamiento","aislante","lana mineral"],["3/8","#3"],["1/2","#4"],["grava","agregado"],["arena","agregado"],["sanitario","wc","inodoro"],["griferia","llave","mezcladora"],["aire acondicionado","hvac","clima","minisplit"]].map(g=>g.map(norm));
+function expand(t){const o=new Set([t]);for(const g of SYN)if(g.some(w=>w===t||(t.length>3&&w.startsWith(t))))g.forEach(w=>o.add(w));return[...o]}
+function matches(h,q){const ts=norm(q).split(/\s+/).filter(Boolean);if(!ts.length)return 1;h=norm(h);let s=0;for(const t of ts){const hit=expand(t).find(a=>h.includes(a));if(!hit)return 0;s+=hit===t?2:1}return s}
+const fmt=(n,d)=>n==null||isNaN(n)?"—":Number(n).toLocaleString("es-MX",{minimumFractionDigits:d??(n<100?2:0),maximumFractionDigits:d??(n<100?2:0)});
+const esc=s=>(s??"").toString().replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tc=()=>parseFloat($("#tc").value)||18.24;
+const lnk=(u,t)=>u?`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`:"";
+const fdate=ts=>ts?new Date(ts).toLocaleString("es-MX",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"";
+
+let tab="mx",catMx="",catInt="",PRE=[],PROV=[],CHG=[],META=null,mine=[],dbRef=null,loaded=false,tcTouched=false;
+try{tab=localStorage.getItem("po_tab")||"mx"}catch(e){}
+
+function chips(el,cats,cur,set){
+  el.innerHTML=["Todo",...cats].map(c=>`<button class="chip" aria-pressed="${(c==="Todo"?"":c)===cur}" data-c="${esc(c)}">${esc(c)}</button>`).join("");
+  el.onclick=e=>{const b=e.target.closest(".chip");if(b)set(b.dataset.c==="Todo"?"":b.dataset.c)};
+}
+function delta(p){
+  if(p.prev_min==null)return"";
+  const now=(p.min+p.max)/2,before=(p.prev_min+p.prev_max)/2;if(!before)return"";
+  const d=(now-before)/before*100;if(Math.abs(d)<0.05)return"";
+  return `<span class="${d>0?"up":"down"}">${d>0?"▲":"▼"} ${fmt(Math.abs(d),1)} % vs. anterior</span>`;
+}
+function priceRow(p,adj=1){
+  const lo=p.min*adj,hi=p.max*adj,usd=p.cur==="USD";
+  const alt=usd?`≈ $${fmt(lo*tc(),0)} MXN`:`≈ ${fmt(lo/tc(),2)}${hi!==lo?"–"+fmt(hi/tc(),2):""} USD`;
+  const T=p.trato&&TRATOS[p.trato];
+  return `<article class="row"><div><h3>${esc(p.mat)}</h3><div class="spec">${esc(p.spec)}</div></div>
+  <div class="price">${usd?"US":""}$${fmt(lo)}${hi!==lo?" – $"+fmt(hi):""}<small>${p.cur} / ${esc(p.unit)} · ${alt}</small></div>
+  <div class="meta"><span class="tag">${esc(p.cat)}</span>${T?`<span class="tag ${T.cls}">${T.lbl}</span>`:""}<span>${esc(p.date)}</span>${delta(p)}${p.note?`<span>${esc(p.note)}</span>`:""}${lnk(p.src_u,"Fuente")}</div>
+  ${p.base==="ref"&&usd&&p.unit==="t"?`<div class="actions"><button class="btn" data-calc="${p._id}">Calcular costo puesto en obra</button></div>`:""}</article>`;
+}
+function contactBlock(s){
+  const tel=(n,l)=>n?`<div><b>${esc(l)}</b><span class="tel">${esc(n)}</span><button class="copy" data-copy="${esc(n)}">Copiar</button> ${lnk("tel:"+n.replace(/[^\d+]/g,""),"Llamar")}</div>`:"";
+  return `<div class="contact">
+    ${tel(s.mx_phone,"Teléfono en México")}${tel(s.phone,s.phone_label||"Teléfono")}
+    ${s.whatsapp?`<div><b>WhatsApp</b><span class="tel">${esc(s.whatsapp)}</span><button class="copy" data-copy="${esc(s.whatsapp)}">Copiar</button></div>`:""}
+    ${s.email?`<div><b>Correo</b>${esc(s.email)}<button class="copy" data-copy="${esc(s.email)}">Copiar</button></div>`:""}
+    ${s.web?`<div><b>Página web</b>${lnk(s.web,s.web.replace(/^https?:\/\/(www\.)?/,"").replace(/\/$/,""))}</div>`:""}
+    ${s.contact_url?`<div><b>Contacto</b>${lnk(s.contact_url,"Formulario / directorio")}</div>`:""}
+    ${s.mx_address||s.address?`<div><b>Dirección</b>${esc(s.mx_address||s.address)}</div>`:""}
+    ${s.other?`<div><b>Otros medios</b>${esc(s.other)}</div>`:""}
+    ${!s.phone&&!s.mx_phone&&!s.email?`<div><b>Teléfono</b>No publicado; usa el formulario de contacto</div>`:""}
+  </div>`;
+}
+function provRow(s){
+  const T=s.trato&&TRATOS[s.trato];
+  const cumple=(s.cumple||[]).map(c=>`<span class="tag ok">${esc(c)}</span>`).join("");
+  return `<article class="row"><div><h3>${esc(s.name)}</h3><div class="spec">${esc(s.prod||s.cat)}</div></div><div class="price"><small>${esc(s.pais||"")}</small></div>
+  <div class="meta"><span class="tag">${esc(s.cat)}</span>${T?`<span class="tag ${T.cls}">${T.lbl}</span>`:""}${cumple}${s.near_tij?`<span class="tag mine">Cerca de Tijuana</span>`:""}</div>
+  ${s.normas?`<div class="meta"><span>Normas: ${esc(s.normas)}</span>${T?`<span>${esc(T.txt)}</span>`:""}</div>`:""}
+  ${contactBlock(s)}</article>`;
+}
+function mineRow(m){
+  const usd=m.cur==="USD";
+  return `<article class="row"><div><h3>${esc(m.mat)}</h3><div class="spec">${esc([m.prov,m.city].filter(Boolean).join(" · "))}</div></div>
+  <div class="price">${usd?"US":""}$${fmt(m.price)}<small>${m.cur} / ${esc(m.unit)} · ${usd?"≈ $"+fmt(m.price*tc())+" MXN":"≈ "+fmt(m.price/tc(),2)+" USD"}</small></div>
+  <div class="meta"><span class="tag mine">Tu cotización</span>${m.date?`<span>${esc(m.date)}</span>`:""}${m.notes?`<span>${esc(m.notes)}</span>`:""}</div>
+  ${m._id?`<div class="actions"><button class="btn ghost" data-del="${m._id}">Borrar</button></div>`:""}</article>`;
+}
+const filt=(arr,fn,q)=>arr.map(r=>({r,s:matches(fn(r),q)})).filter(x=>x.s).sort((a,b)=>b.s-a.s).map(x=>x.r);
+const waiting=t=>`<div class="empty">${loaded?t:"Cargando la base de precios…"}</div>`;
+
+function render(){
+  const q=$("#q").value, adj=1+(parseFloat($("#region").value)||0)/100, tf=$("#trato").value;
+  const mx=filt(PRE.filter(p=>p.base==="mx"&&(!catMx||p.cat===catMx)),p=>`${p.cat} ${p.mat} ${p.spec} ${p.note}`,q);
+  const mineHits=q?filt(mine,m=>`${m.mat} ${m.prov} ${m.city} ${m.notes}`,q):[];
+  const mxp=filt(PROV.filter(s=>s.scope==="mx"&&(!catMx||s.cat===catMx)),s=>`${s.cat} ${s.name} ${s.prod} ${s.address}`,q);
+  $("#n-mx").textContent=loaded?mx.length:"";
+  $("#list-mx").innerHTML=[...mineHits.map(mineRow),...mx.map(p=>priceRow(p,adj))].join("")||waiting(`No hay "${esc(q)}" en la base de México. Usa "Buscar en vivo" y guarda lo que encuentres en Mis cotizaciones.`);
+  $("#list-mxp").innerHTML=mxp.map(provRow).join("")||waiting("No hay proveedores locales para esta búsqueda.");
+  const okT=r=>!tf||(tf==="sin"?r.trato==="sin":r.trato&&r.trato!=="sin");
+  const ref=filt(PRE.filter(p=>p.base==="ref"&&(!catInt||p.cat===catInt)&&okT(p)),p=>`${p.cat} ${p.mat} ${p.spec} ${p.note}`,q);
+  const intl=filt(PROV.filter(s=>s.scope==="int"&&(!catInt||s.cat===catInt)&&okT(s)),s=>`${s.cat} ${s.name} ${s.pais} ${s.prod} ${s.normas}`,q);
+  $("#n-int").textContent=loaded?intl.length:"";
+  $("#list-ref").innerHTML=ref.map(p=>priceRow(p)).join("")||waiting("Sin precios de referencia para esta búsqueda.");
+  $("#list-int").innerHTML=intl.map(provRow).join("")||waiting(`Sin fabricantes para "${esc(q)}".`);
+  const ch=filt(CHG,c=>`${c.mat} ${c.cat}`,q);
+  $("#n-chg").textContent=CHG.length||"";
+  $("#list-chg").innerHTML=ch.map(c=>{const up=c.pct>0;return `<article class="row"><div><h3>${esc(c.mat)}</h3><div class="spec">${fdate(c.ts)}</div></div>
+    <div class="price ${up?"up":"down"}">${up?"▲":"▼"} ${fmt(Math.abs(c.pct),1)} %<small>${c.cur} ${fmt(c.old_min)}${c.old_max!==c.old_min?"–"+fmt(c.old_max):""} → ${fmt(c.new_min)}${c.new_max!==c.new_min?"–"+fmt(c.new_max):""} / ${esc(c.unit)}</small></div>
+    <div class="meta">${c.note?`<span>${esc(c.note)}</span>`:""}${lnk(c.src_u,"Fuente")}</div></article>`}).join("")
+    ||waiting("Todavía no hay cambios registrados. La revisión diaria anotará aquí cada subida o bajada de precio.");
+  const mr=filt(mine,m=>`${m.mat} ${m.prov} ${m.city} ${m.notes}`,q);
+  $("#n-mine").textContent=mine.length||"";
+  $("#list-mine").innerHTML=mr.map(mineRow).join("")||`<div class="empty">${mine.length?"Ninguna cotización coincide.":"Aquí aparecerán las cotizaciones de tus proveedores. Guarda la primera con el formulario de arriba."}</div>`;
+  chips($("#cats-mx"),[...new Set(PRE.filter(p=>p.base==="mx").map(p=>p.cat))],catMx,c=>{catMx=c;render()});
+  chips($("#cats-int"),[...new Set(PROV.filter(s=>s.scope==="int").map(s=>s.cat))],catInt,c=>{catInt=c;render()});
+  renderLive(q);
+  if(META&&!tcTouched&&META.tc)$("#tc").value=META.tc;
+}
+function renderLive(q){
+  const t=q.trim()||"material de construcción",e=encodeURIComponent;
+  $("#live").innerHTML=`<span class="note">Buscar en vivo "${esc(t)}":</span>
+   <a target="_blank" rel="noopener" href="https://www.google.com/search?q=${e("precio "+t+" Tijuana")}">Google Tijuana</a>
+   <a target="_blank" rel="noopener" href="https://www.google.com/search?q=${e(t+" site:homedepot.com.mx")}">Home Depot MX</a>
+   <a target="_blank" rel="noopener" href="https://listado.mercadolibre.com.mx/${e(norm(t).replace(/[^a-z0-9]+/g,"-"))}">Mercado Libre</a>
+   <a target="_blank" rel="noopener" href="https://www.google.com/search?q=${e(t+" manufacturer ISO 9001 ASTM export Mexico")}">Fabricantes internacionales</a>`;
+}
+function setTab(t){
+  tab=t;document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.p===t));
+  ["mx","int","chg","mine","calc"].forEach(p=>$("#p-"+p).hidden=p!==t);
+  try{localStorage.setItem("po_tab",t)}catch(e){}
+  if(t==="chg"){try{localStorage.setItem("po_seen",String(Date.now()))}catch(e){};$("#newchg").hidden=true}
+}
+document.querySelector(".tabs").onclick=e=>{const b=e.target.closest("button");if(b)setTab(b.dataset.p)};
+$("#q").addEventListener("input",render);$("#region").onchange=render;$("#trato").onchange=render;
+$("#tc").addEventListener("input",()=>{tcTouched=true;render();calc()});
+$("#newchg-b").onclick=()=>setTab("chg");
+document.addEventListener("click",async e=>{
+  const c=e.target.closest("[data-copy]");
+  if(c){try{await navigator.clipboard.writeText(c.dataset.copy);c.textContent="Copiado"}catch(err){const r=document.createRange();r.selectNodeContents(c.previousElementSibling||c);const s=getSelection();s.removeAllRanges();s.addRange(r);c.textContent="Selecciónalo"}setTimeout(()=>c.textContent="Copiar",1500)}
+  const b=e.target.closest("[data-calc]");if(b){loadSrc(b.dataset.calc);setTab("calc");scrollTo({top:0})}
+});
+
+/* calculadora */
+function fillSrc(){
+  const refs=PRE.filter(p=>p.base==="ref"&&p.cur==="USD"&&p.unit==="t");const cur=$("#c-src").value;
+  $("#c-src").innerHTML=refs.map(p=>`<option value="${p._id}">${esc(p.mat)} · ${esc(p.spec)}</option>`).join("");
+  if(cur&&refs.some(p=>p._id===cur))$("#c-src").value=cur;else if(refs.length)loadSrc((refs.find(p=>/turqu/i.test(p.spec))||refs[0])._id);
+}
+function loadSrc(id){
+  const p=PRE.find(x=>x._id===id);if(!p)return;$("#c-src").value=id;$("#c-fob").value=p.min;
+  const T=TRATOS[p.trato]||TRATOS.sin;$("#c-igi").value=T.igi!=null?T.igi:(p.cat==="Acero"?50:35);
+  const isCem=/cement/i.test(p.cat),isViga=/viga/i.test(p.mat);
+  const ref=isCem?PRE.find(m=>m.base==="mx"&&/^cemento/i.test(m.mat)&&m.unit==="ton"):isViga?null:PRE.find(m=>m.base==="mx"&&/varilla.*3\/8/i.test(m.mat));
+  $("#c-mx").value=ref?Math.round((ref.min+ref.max)/2/1.16):"";
+  $("#c-hint").textContent=(T.igi==null?`País sin tratado: arancel estimado de ${$("#c-igi").value} %. `:"Con tratado: 0 % si el proveedor entrega certificado de origen. ")+(ref?`Se compara contra ${ref.mat} (${ref.spec}), punto medio sin IVA.`:"No hay precio comparable en la base de México; escribe tu cotización local.");
+  calc();
+}
+function calc(){
+  const v=id=>parseFloat($(id).value)||0,T=tc(),fob=v("#c-fob"),cif=(fob+v("#c-frt")+fob*v("#c-ins")/100)*T;
+  const igi=cif*v("#c-igi")/100,dta=cif*v("#c-dta")/100,agt=cif*v("#c-agt")/100,loc=v("#c-loc"),total=cif+igi+dta+agt+loc,iva=(cif+igi+dta)*.16,mx=v("#c-mx");
+  const L=(a,b)=>`<tr><td>${a}</td><td>$${fmt(b,0)}</td></tr>`;
+  $("#c-out").innerHTML=L("Valor en aduana (FOB + flete + seguro)",cif)+L(`Arancel IGI ${v("#c-igi")} %`,igi)+L("DTA",dta)+L("Agente aduanal",agt)+L("Maniobras y flete a obra",loc)+`<tr class="total"><td>Total por tonelada, sin IVA</td><td>$${fmt(total,0)}</td></tr>`+L("IVA de importación (acreditable)",iva);
+  const vd=$("#c-verdict");if(!fob){vd.className="verdict warn";vd.textContent="Elige un precio de origen.";return}
+  if(!mx){vd.className="verdict warn";vd.textContent="Escribe el precio en México para comparar.";return}
+  const d=(total-mx)/mx*100;vd.className="verdict "+(d<-8?"ok":d<0?"warn":"bad");
+  vd.textContent=d<0?`Importar sale ${fmt(-d,1)} % más barato ($${fmt(mx-total,0)} menos por tonelada).${d>-8?" Margen corto: el tipo de cambio o un retraso en puerto lo pueden borrar.":""}`:`Importar sale ${fmt(d,1)} % más caro que comprar en México ($${fmt(total-mx,0)} más por tonelada).`;
+}
+["#c-fob","#c-frt","#c-ins","#c-igi","#c-dta","#c-agt","#c-loc","#c-mx"].forEach(id=>$(id).addEventListener("input",calc));
+$("#c-src").onchange=e=>loadSrc(e.target.value);
+
+/* datos locales */
+const DATA={"precios": [{"base": "mx", "cat": "Cementantes", "mat": "Cemento gris CPC 30R", "spec": "Puesto en obra, 50 bultos", "unit": "ton", "min": 4850, "max": 5200, "cur": "MXN", "src_t": "OneEstimate, Lista de precios de materiales México 2026 (22 ago 2026)", "src_u": "https://oneestimate.ai/es/blog/lista-precios-materiales-construccion-mexico-2026", "date": "ago 2026", "note": "", "updated": 1792195200000, "_id": "cemento-cpc30r-ton"}, {"base": "mx", "cat": "Cementantes", "mat": "Cemento gris CPC 30R", "spec": "Bulto 50 kg, menudeo", "unit": "bulto", "min": 215, "max": 245, "cur": "MXN", "src_t": "OneEstimate, Lista de precios de materiales México 2026 (22 ago 2026)", "src_u": "https://oneestimate.ai/es/blog/lista-precios-materiales-construccion-mexico-2026", "date": "ago 2026", "note": "", "updated": 1792195200000, "_id": "cemento-cpc30r-bulto"}, {"base": "mx", "cat": "Cementantes", "mat": "Cal hidratada", "spec": "Bulto 25 kg", "unit": "bulto", "min": 95, "max": 115, "cur": "MXN", "src_t": "OneEstimate, Lista de precios de materiales México 2026 (22 ago 2026)", "src_u": "https://oneestimate.ai/es/blog/lista-precios-materiales-construccion-mexico-2026", "date": "ago 2026", "note": "Para aplanados", "updated": 1792195200000, "_id": "cal-hidratada"}, {"base": "mx", "cat": "Agregados", "mat": "Arena de mina / río", "spec": "Varía por banco", "unit": "m³", "min": 580, "max": 720, "cur": "MXN", "src_t": "OneEstimate, Lista de precios de materiales México 2026 (22 ago 2026)", "src_u": "https://oneestimate.ai/es/blog/lista-precios-materiales-construccion-mexico-2026", "date": "ago 2026", "note": "", "updated": 1792195200000, "_id": "arena"}, {"base": "mx", "cat": "Agregados", "mat": "Grava 3/4\"", "spec": "Triturada o de banco", "unit": "m³", "min": 650, "max": 790, "cur": "MXN", "src_t": "OneEstimate, Lista de precios de materiales México 2026 (22 ago 2026)", "src_u": "https://oneestimate.ai/es/blog/lista-precios-materiales-construccion-mexico-2026", "date": "ago 2026", "note": "", "updated": 1792195200000, "_id": "grava-3-4"}, {"base": "mx", "cat": "Agregados", "mat": "Piedra brasa", "spec": "Cimentación ciclópea", "unit": "m³", "min": 550, "max": 680, "cur": "MXN", "src_t": "OneEstimate, Lista de precios de materiales México 2026 (22 ago 2026)", "src_u": "https://oneestimate.ai/es/blog/lista-precios-materiales-construccion-mexico-2026", "date": "ago 2026", "note": "", "updated": 1792195200000, "_id": "piedra-brasa"}, {"base": "mx", "cat": "Acero", "mat": "Varilla corrugada 3/8\" (#3)", "spec": "Grado 42, por tonelada", "unit": "ton", "min": 24500, "max": 26800, "cur": "MXN", "src_t": "OneEstimate, Lista de precios de materiales México 2026 (22 ago 2026)", "src_u": "https://oneestimate.ai/es/blog/lista-precios-materiales-construccion-mexico-2026", "date": "ago 2026", "note": "Por pieza en ferretería cuesta 20 a 35 % más", "updated": 1792195200000, "_id": "varilla-3-8"}, {"base": "mx", "cat": "Acero", "mat": "Varilla corrugada 1/2\" (#4)", "spec": "Grado 42, por tonelada", "unit": "ton", "min": 24200, "max": 26500, "cur": "MXN", "src_t": "OneEstimate, Lista de precios de materiales México 2026 (22 ago 2026)", "src_u": "https://oneestimate.ai/es/blog/lista-precios-materiales-construccion-mexico-2026", "date": "ago 2026", "note": "Por pieza en ferretería cuesta 20 a 35 % más", "updated": 1792195200000, "_id": "varilla-1-2"}, {"base": "mx", "cat": "Acero", "mat": "Alambrón 1/4\"", "spec": "Liso", "unit": "kg", "min": 28.5, "max": 32, "cur": "MXN", "src_t": "OneEstimate, Lista de precios de materiales México 2026 (22 ago 2026)", "src_u": "https://oneestimate.ai/es/blog/lista-precios-materiales-construccion-mexico-2026", "date": "ago 2026", "note": "", "updated": 1792195200000, "_id": "alambron-1-4"}, {"base": "mx", "cat": "Acero", "mat": "Alambre recocido", "spec": "Cal. 18", "unit": "kg", "min": 31, "max": 35, "cur": "MXN", "src_t": "OneEstimate, Lista de precios de materiales México 2026 (22 ago 2026)", "src_u": "https://oneestimate.ai/es/blog/lista-precios-materiales-construccion-mexico-2026", "date": "ago 2026", "note": "", "updated": 1792195200000, "_id": "alambre-recocido"}, {"base": "mx", "cat": "Acero", "mat": "Malla electrosoldada", "spec": "6-6/10-10", "unit": "m²", "min": 58, "max": 72, "cur": "MXN", "src_t": "OneEstimate, Lista de precios de materiales México 2026 (22 ago 2026)", "src_u": "https://oneestimate.ai/es/blog/lista-precios-materiales-construccion-mexico-2026", "date": "ago 2026", "note": "", "updated": 1792195200000, "_id": "malla-66-1010"}, {"base": "mx", "cat": "Acero", "mat": "Armex castillo prefabricado", "spec": "15x15-4, tramo 6 m", "unit": "tramo", "min": 285, "max": 320, "cur": "MXN", "src_t": "OneEstimate, Lista de precios de materiales México 2026 (22 ago 2026)", "src_u": "https://oneestimate.ai/es/blog/lista-precios-materiales-construccion-mexico-2026", "date": "ago 2026", "note": "", "updated": 1792195200000, "_id": "armex-15x15"}, {"base": "mx", "cat": "Mampostería", "mat": "Tabique rojo recocido", "spec": "7x14x28 cm", "unit": "millar", "min": 4200, "max": 4900, "cur": "MXN", "src_t": "OneEstimate, Lista de precios de materiales México 2026 (22 ago 2026)", "src_u": "https://oneestimate.ai/es/blog/lista-precios-materiales-construccion-mexico-2026", "date": "ago 2026", "note": "", "updated": 1792195200000, "_id": "tabique-rojo"}, {"base": "mx", "cat": "Mampostería", "mat": "Block de concreto hueco", "spec": "15x20x40 cm", "unit": "pza", "min": 16.5, "max": 19.5, "cur": "MXN", "src_t": "OneEstimate, Lista de precios de materiales México 2026 (22 ago 2026)", "src_u": "https://oneestimate.ai/es/blog/lista-precios-materiales-construccion-mexico-2026", "date": "ago 2026", "note": "Sin mortero ni mano de obra", "updated": 1792195200000, "_id": "block-15x20x40"}, {"base": "mx", "cat": "Mampostería", "mat": "Block de concreto hueco", "spec": "15x20x40 cm, Mexlam, Yucatán", "unit": "pza", "min": 13, "max": 13, "cur": "MXN", "src_t": "Cotización Ferromateriales Maranata, Yucatán (2 abr 2026)", "src_u": "https://es.scribd.com/document/1045529630/283", "date": "abr 2026", "note": "Cotización real con IVA", "updated": 1792195200000, "_id": "block-15x20x40-yuc"}, {"base": "mx", "cat": "Mampostería", "mat": "Tabicón ligero", "spec": "10x14x28 cm", "unit": "pza", "min": 9.8, "max": 12, "cur": "MXN", "src_t": "OneEstimate, Lista de precios de materiales México 2026 (22 ago 2026)", "src_u": "https://oneestimate.ai/es/blog/lista-precios-materiales-construccion-mexico-2026", "date": "ago 2026", "note": "", "updated": 1792195200000, "_id": "tabicon"}, {"base": "mx", "cat": "Mampostería", "mat": "Ladrillo térmico / extruido", "spec": "Medida variable", "unit": "pza", "min": 18, "max": 25, "cur": "MXN", "src_t": "OneEstimate, Lista de precios de materiales México 2026 (22 ago 2026)", "src_u": "https://oneestimate.ai/es/blog/lista-precios-materiales-construccion-mexico-2026", "date": "ago 2026", "note": "", "updated": 1792195200000, "_id": "ladrillo-extruido"}, {"base": "mx", "cat": "Concreto", "mat": "Concreto premezclado f'c 200", "spec": "Solo suministro", "unit": "m³", "min": 2200, "max": 2800, "cur": "MXN", "src_t": "OneEstimate, APU de concreto 2025-2026", "src_u": "https://oneestimate.ai/es/blog/ejemplo-apu-concreto-muros-losas", "date": "2025-26", "note": "", "updated": 1792195200000, "_id": "premezclado-200"}, {"base": "mx", "cat": "Concreto", "mat": "Concreto premezclado f'c 250", "spec": "Solo suministro", "unit": "m³", "min": 2500, "max": 3200, "cur": "MXN", "src_t": "OneEstimate, APU de concreto 2025-2026", "src_u": "https://oneestimate.ai/es/blog/ejemplo-apu-concreto-muros-losas", "date": "2025-26", "note": "", "updated": 1792195200000, "_id": "premezclado-250"}, {"base": "mx", "cat": "Concreto", "mat": "Concreto f'c 250 bombeable colocado", "spec": "Tabulador CDMX FE13CB, P.U. con mano de obra", "unit": "m³", "min": 4997.84, "max": 4997.84, "cur": "MXN", "src_t": "Tabulador General de Precios Unitarios CDMX 2026, act. julio 2026", "src_u": "https://tandacasa.com/blog/colado-de-losa-cuanto-cuesta-2026", "date": "jul 2026", "note": "Precio unitario completo, no solo material", "updated": 1792195200000, "_id": "pu-fe13cb"}, {"base": "mx", "cat": "Concreto", "mat": "Concreto f'c 250 sin bombeo colocado", "spec": "Tabulador CDMX FE14CB, rev. 10", "unit": "m³", "min": 4562.2, "max": 4562.2, "cur": "MXN", "src_t": "Tabulador General de Precios Unitarios CDMX 2026, act. julio 2026", "src_u": "https://tandacasa.com/blog/colado-de-losa-cuanto-cuesta-2026", "date": "jul 2026", "note": "Precio unitario completo", "updated": 1792195200000, "_id": "pu-fe14cb"}, {"base": "mx", "cat": "Concreto", "mat": "Concreto f'c 250 hecho en obra", "spec": "Tabulador CDMX FC16CB", "unit": "m³", "min": 5079.11, "max": 5079.11, "cur": "MXN", "src_t": "Tabulador General de Precios Unitarios CDMX 2026, act. julio 2026", "src_u": "https://tandacasa.com/blog/colado-de-losa-cuanto-cuesta-2026", "date": "jul 2026", "note": "Precio unitario completo", "updated": 1792195200000, "_id": "pu-fc16cb"}, {"base": "mx", "cat": "Acabados", "mat": "Tablaroca / panel de yeso", "spec": "Hoja 1.22 x 2.44 m, de ligero a antimoho o RF", "unit": "hoja", "min": 217, "max": 534, "cur": "MXN", "src_t": "Home Depot MX vía Tanda Casa (14 sep 2026)", "src_u": "https://tandacasa.com/blog/precio-hoja-tablaroca-2026", "date": "sep 2026", "note": "Rinde 2.98 m² por hoja", "updated": 1792195200000, "_id": "tablaroca-hoja"}, {"base": "mx", "cat": "Acabados", "mat": "Durock (tablacemento)", "spec": "Hoja 1.22 x 2.44 m", "unit": "hoja", "min": 917.1, "max": 1019, "cur": "MXN", "src_t": "Home Depot MX vía Tanda Casa (14 sep 2026)", "src_u": "https://tandacasa.com/blog/precio-hoja-tablaroca-2026", "date": "sep 2026", "note": "917.10 comprando 10 o más", "updated": 1792195200000, "_id": "durock-hoja"}, {"base": "ref", "cat": "Acero", "mat": "Varilla corrugada", "spec": "FOB Turquía", "unit": "t", "min": 575, "max": 575, "cur": "USD", "src_t": "SMM, varilla Turquía (22 jul 2026)", "src_u": "https://news.metal.com/en/newscontent/104018505-smm-steel-scrap-cost-support-and-mild-demand-recovery-drive-turkish-rebar-prices-higher", "date": "jul 2026", "trato": "sin", "note": "Paga 50 % de arancel por no haber tratado; revisa el costo puesto en la calculadora", "updated": 1792195200000, "_id": "ref-varilla-tr"}, {"base": "ref", "cat": "Acero", "mat": "Varilla corrugada", "spec": "Precio promedio mercado EE.UU.", "unit": "t", "min": 1014, "max": 1014, "cur": "USD", "src_t": "GMK Center, mercado global de varilla (mar 2026)", "src_u": "https://gmk.center/en/news/european-rebar-prices-rose-sharply-in-march/amp/", "date": "mar 2026", "trato": "tmec", "note": "Referencia del mercado estadounidense, no FOB", "updated": 1792195200000, "_id": "ref-varilla-us"}, {"base": "ref", "cat": "Acero", "mat": "Varilla corrugada", "spec": "China, precio interno en almacén", "unit": "t", "min": 449, "max": 449, "cur": "USD", "src_t": "GMK Center, mercado global de varilla (mar 2026)", "src_u": "https://gmk.center/en/news/european-rebar-prices-rose-sharply-in-march/amp/", "date": "mar 2026", "trato": "sin", "note": "No es FOB; 50 % de arancel y posibles cuotas compensatorias", "updated": 1792195200000, "_id": "ref-varilla-cn"}, {"base": "ref", "cat": "Acero", "mat": "Viga W (IPR) estructural", "spec": "EE.UU., ASTM A992", "unit": "t", "min": 1720, "max": 1720, "cur": "USD", "src_t": "Precio vigas W EE.UU., T1 2026 (reporte de exportador)", "src_u": "https://www.chinaroyalsteel.com/news/2026-w-flange-beam-prices-up-5-8-china-royal-steel-stable-supply-quotes/", "date": "T1 2026", "trato": "tmec", "note": "≈ 78 USD/cwt; dato de un exportador, confirma con distribuidor", "updated": 1792195200000, "_id": "ref-viga-us"}, {"base": "ref", "cat": "Cemento", "mat": "Cemento ASTM tipo I a granel", "spec": "FOB Vietnam", "unit": "t", "min": 39.5, "max": 39.5, "cur": "USD", "src_t": "S&P Global Platts, cemento FOB Vietnam (12 jun 2026)", "src_u": "https://www.spglobal.com/energy/en/news-research/latest-news/metals/061226-vietnam-data-may-clinker-and-cement-exports-rise-5-yoy-to-311-mil-mt", "date": "jun 2026", "trato": "cptpp", "note": "Flete transpacífico y manejo de granel pesan mucho", "updated": 1792195200000, "_id": "ref-cemento-vn"}, {"base": "ref", "cat": "Cemento", "mat": "Cemento a granel", "spec": "FOB Turquía / Egipto", "unit": "t", "min": 58, "max": 62, "cur": "USD", "src_t": "Argus, cemento FOB Turquía/Egipto", "src_u": "https://www.argusmedia.com/en/news-and-insights/latest-market-news/2769808-viewpoint-cbam-to-reshape-med-cement-trade-flows", "date": "fin 2025", "trato": "sin", "note": "Rango alto 50s a bajo 60s USD/t", "updated": 1792195200000, "_id": "ref-cemento-tr"}], "proveedores": [{"scope": "int", "cat": "Acero", "name": "Nucor Corporation", "pais": "EE.UU.", "trato": "tmec", "prod": "Varilla, vigas, lámina", "normas": "Rebar: ASTM A615/A615M-22, ASTM A706/A706M-22, ASTM A767/A767M-19 (galvanized) per official rebar page. Beams/A992 not confirmed.", "cumple": ["Norma EE.UU."], "web": "https://nucor.com", "contact_url": "https://nucor.com/contact/", "phone": "+1 704-366-7000", "phone_label": "Corporate HQ, 1915 Rexford Road, Charlotte, NC 28211", "mx_phone": null, "mx_address": null, "email": null, "other": "Contact form on nucor.com/contact; rebar product page nucor.com/products/rebar ('Contact the Rebar Group'); rebar distribution via Harris Supply Solutions (harrissupplysolutions.com); credit application creditapp.nucor.com", "near_tij": false, "_id": "nucor-corporation"}, {"scope": "int", "cat": "Acero", "name": "Nucor Vulcraft", "pais": "EE.UU.", "trato": "tmec", "prod": "Losacero (steel deck) y armaduras", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://vulcraft.com", "contact_url": "https://vulcraft.com/contact", "phone": "+1 435-734-9433", "phone_label": "Vulcraft Utah plant (closest to Baja), 1875 UT-13, Brigham City, UT 84302. Other plants: Fort Payne AL +1 256-845-2460; St Joe IN +1 260-337-1800; Norfolk NE +1 402-644-8500; Chemung NY +1 607-529-9000; Florence SC +1 843-662-0381; Grapeland TX +1 936-687-4665; Nucor Detailing Center Norfolk NE +1 402-844-2400", "mx_phone": null, "mx_address": null, "email": null, "other": "Literature request vulcraft.com/resources/literature; presentation request vulcraft.com/learning; credit app creditapp.nucor.com; Canada site vulcraft.ca", "near_tij": false, "_id": "nucor-vulcraft"}, {"scope": "int", "cat": "Acero", "name": "Commercial Metals Company (CMC)", "pais": "EE.UU.", "trato": "tmec", "prod": "Varilla, malla, alambrón", "normas": "All CMC mill rebar: ASTM A615, ASTM A706 (AASHTO M31), ASTM A1035 (CMC Steel Mills General Compliance Certificate)", "cumple": ["Norma EE.UU."], "web": "https://www.cmc.com", "contact_url": "https://www.cmc.com/en-us/contact-us", "phone": "+1 214-689-4300", "phone_label": "Corporate HQ (Americas), 6565 N. MacArthur Blvd., Suite 800, Irving, TX 75039. Europe: +48 32 672 16 21", "mx_phone": null, "mx_address": null, "email": null, "other": "Contact page (could not be fetched to confirm content)", "near_tij": false, "_id": "commercial-metals-company-cmc"}, {"scope": "int", "cat": "Acero", "name": "Gerdau Long Steel North America (and Gerdau Corsa, Mexico)", "pais": "EE.UU. / México", "trato": "tmec", "prod": "Vigas, perfiles y varilla; Gerdau Corsa produce en México", "normas": "Rebar: ASTM A615 and ASTM A706 (official Gerdau ASTM compliance letter)", "cumple": ["Norma EE.UU."], "web": "https://www.gerdau.com", "contact_url": null, "phone": "+1 800-637-8144", "phone_label": "Gerdau Long Steel North America HQ, 4221 W. Boy Scout Blvd., Suite 600, Tampa, FL 33607 (number from header of official Gerdau quality document). Directory listing also gives +1 813-286-8383.", "mx_phone": null, "mx_address": "Gerdau Corsa plants (Global Energy Monitor wiki, not official): Km 3 Ctra. Mex-Cd. Sahagún, Zona Ind. Tepeapulco, Ciudad Sahagún, Hgo. 43990; Primera Sur S/N, Independencia, Tultitlán, Edo. Méx. 54915", "email": null, "other": "Quality contact on official ASTM compliance letter: Ben Lovell, Director Corporate Quality, +1 731-423-5213, benjamin.lovell@gerdau.com (quality matters only)", "near_tij": false, "_id": "gerdau-long-steel-north-america-and-gerdau-corsa-m"}, {"scope": "int", "cat": "Acero", "name": "Steel Dynamics, Inc. (SDI)", "pais": "EE.UU.", "trato": "tmec", "prod": "Perfiles estructurales, varilla, riel", "normas": "ISO 9001 (Structural & Rail, Roanoke Bar, Pittsboro, SWVA, Vulcan), ISO 17025 (Vulcan), AASHTO, Buy America, AAR, ABS, GSCC product certification. ASTM A615/A706/A992 not explicitly listed on certifications page.", "cumple": ["Norma EE.UU.", "ISO 9001"], "web": "https://www.steeldynamics.com", "contact_url": "https://lpg.steeldynamics.com/contact/locations.html", "phone": "+1 260-969-3500", "phone_label": "Corporate office, 7575 W. Jefferson Blvd., Fort Wayne, IN 46804. Structural & Rail Division (beams), Columbia City IN: +1 866-740-8700; Roanoke Bar Division (rebar/merchant), Roanoke VA: +1 800-765-6567", "mx_phone": null, "mx_address": null, "email": null, "other": "Long Products Group plant contact list (lpg.steeldynamics.com)", "near_tij": false, "_id": "steel-dynamics-inc-sdi"}, {"scope": "int", "cat": "Acero", "name": "ArcelorMittal (and ArcelorMittal México)", "pais": "Luxemburgo / México", "trato": "ue", "prod": "Varilla, alambrón, perfiles; planta en México", "normas": "Rebar grades 42 to 80 (Celaya). Wire products catalog cites NMX-B-013, NMX-B-072-CANACERO, NMX-B-505, NMX-B-507, NMX-B-366, NMX-B-503, ASTM A641, A407, A227, A853, F1667. NMX-B-506 / ASTM A615 for rebar not confirmed on fetched pages.", "cumple": ["Norma EE.UU.", "Norma México"], "web": "https://corporate.arcelormittal.com", "contact_url": "https://mexico.arcelormittal.com/contacto/", "phone": "+352 4792 2484", "phone_label": "Group HQ, 24-26 Boulevard d'Avranches, L-1160 Luxembourg (phone from GlobalData profile, not official site)", "mx_phone": "+52 81 1223 6700 (corporativo). Ventas productos largos: Construcción +52 55 5864 6409; Industria +52 55 5864 6421; Norte +52 81 1223 6731; Metro-Centro +52 55 5864 6413; Bajío +52 461 615 6144 ext. 6158; Pacífico listed as '(81) 2223 6733' (as printed, possibly typo); CDAM Guadalajara +52 33 1029 8030 ext. 6061", "mx_address": "Torre Trébol Park, Piso 18, Av. Lázaro Cárdenas No. 2424, Col. Residencial San Agustín, San Pedro Garza García/Monterrey, N.L. Plants: Lázaro Cárdenas, Mich. (Av. Francisco J. Múgica No. 1, C.P. 60950); Celaya rebar mill (Carretera Panamericana Km 7.5, Villagrán, Gto., C.P. 38110)", "email": "ventas.trefilados@arcelormittal.com (wire/trefilados sales only)", "other": "Contact page mexico.arcelormittal.com/contacto/; North America site northamerica.arcelormittal.com", "near_tij": false, "_id": "arcelormittal-and-arcelormittal-m-xico"}, {"scope": "int", "cat": "Acero", "name": "CELSA Group", "pais": "España", "trato": "ue", "prod": "Varilla, malla, alambrón", "normas": "B500SD rebar (EPD per EN 15804+A2 / ISO 14025). EN 10080 / AENOR / CARES not confirmed on fetched pages.", "cumple": ["Norma Europa"], "web": "https://www.celsagroup.com", "contact_url": "https://www.celsagroup.com/en/contact/", "phone": "+34 937 730 400", "phone_label": "Group HQ, Carrer de la Ferralla 12, Pol. Ind. San Vicente, 08755 Castellbisbal (Barcelona)", "mx_phone": null, "mx_address": null, "email": "info@celsagroup.com", "other": "Contact form https://www.celsagroup.com/en/contact-us/", "near_tij": false, "_id": "celsa-group"}, {"scope": "int", "cat": "Acero", "name": "Nippon Steel Corporation", "pais": "Japón", "trato": "jp", "prod": "Perfiles H, placa, tubería; dueño de U.S. Steel", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.nipponsteel.com/en/", "contact_url": null, "phone": "+81-3-6867-4111", "phone_label": "Head Office, 2-6-1 Marunouchi, Chiyoda-ku, Tokyo 100-8071. Americas: Nippon Steel North America, Houston +1-713-654-7111", "mx_phone": "+52-55-5281-6123", "mx_address": "Mexico Representative Office (Nippon Steel North America, Inc.), Calle Rubén Darío 281 No. 2101, Col. Bosque de Chapultepec, CDMX 11580", "email": null, "other": null, "near_tij": false, "_id": "nippon-steel-corporation"}, {"scope": "int", "cat": "Cemento y concreto", "name": "CalPortland Company", "pais": "EE.UU.", "trato": "tmec", "prod": "Cemento, concreto premezclado (opera en San Diego)", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.calportland.com", "contact_url": "https://www.calportland.com/contact-us/", "phone": "+1 626-852-6200", "phone_label": "Corporate, 10655 W Park Run Drive, Suite 275, Las Vegas, NV 89144 (per Jan-2026 letter to City of San Diego). PCA directory lists 2025 East Financial Way, Glendora, CA 91741, +1 844-823-6309", "mx_phone": null, "mx_address": null, "email": null, "other": "Contact page (not fetched)", "near_tij": true, "_id": "calportland-company"}, {"scope": "int", "cat": "Cemento y concreto", "name": "Mitsubishi Cement Corporation", "pais": "EE.UU.", "trato": "tmec", "prod": "Cemento tipo I, II, V; planta en California", "normas": "ASTM C150-16 Types I, II, II(MH), V low-alkali; Caltrans Section 90; NDOT 701; AZDOT 1006-2.01 (mill certificate). EPDs for portland, portland-limestone, blended and masonry cement.", "cumple": ["Norma EE.UU."], "web": "https://mitsubishicement.com", "contact_url": "https://mitsubishicement.com/?p=1781", "phone": "+1 760-248-5105", "phone_label": "Sales. Corporate office: 151 Cassia Way, Henderson, NV 89014, +1 702-932-3900. Cushenbury plant: 5808 State Highway 18, Lucerne Valley, CA 92356, +1 760-248-7373", "mx_phone": null, "mx_address": null, "email": null, "other": null, "near_tij": true, "_id": "mitsubishi-cement-corporation"}, {"scope": "int", "cat": "Cemento y concreto", "name": "Holcim (and Holcim México)", "pais": "Suiza / México", "trato": "aelc", "prod": "Cemento, concreto, agregados", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.holcim.com", "contact_url": "https://www.holcim.com/contacts", "phone": "+41 58 858 58 58", "phone_label": "Group HQ, Holcim Ltd, Grafenauweg 10, 6300 Zug", "mx_phone": "800 427 2726 (customer service, displayed on holcimsoluciones.com/mexico; page's tel: link points to a different number); WhatsApp 'Mia' +52 55 8041 7693", "mx_address": "Av. Prolongación Vasco de Quiroga No. 4800, Oficina 101, Piso 1, Santa Fe, Cuajimalpa, CDMX 05348 (from BMV issuer profile of Holcim Capital México, listing cancelled; phone there 55 5724 0000; treat as lower confidence)", "email": "info.mexico@holcim.com (displayed on Holcim México site; mailto link inconsistent). Group: media@holcim.com, investor.relations@holcim.com", "other": "Global directory https://www.holcim.com/directory; US business spun off as Amrize (HQ 8700 W. Bryn Mawr Ave, Ste 300, Chicago IL 60631, +1 773-372-1000, contact form at amrize.com)", "near_tij": false, "_id": "holcim-and-holcim-m-xico"}, {"scope": "int", "cat": "Cemento y concreto", "name": "Heidelberg Materials", "pais": "Alemania", "trato": "ue", "prod": "Cemento, agregados", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.heidelbergmaterials.com", "contact_url": "https://www.heidelbergmaterials.com/en/contact-us", "phone": "+49 6221 481-0", "phone_label": "Heidelberg Materials AG HQ, Berliner Strasse 6, 69120 Heidelberg. North America: 300 E John Carpenter Fwy, Irving, TX 75062, +1 972-653-5500", "mx_phone": null, "mx_address": null, "email": "info@heidelbergmaterials.com", "other": "Contact form with routing for sales enquiries outside Germany and country redirect", "near_tij": false, "_id": "heidelberg-materials"}, {"scope": "int", "cat": "Cemento y concreto", "name": "Cementos Argos (and Argos USA)", "pais": "Colombia / EE.UU.", "trato": "ap", "prod": "Cemento, concreto", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.argos.co", "contact_url": null, "phone": "+57 604 319 8700", "phone_label": "Cementos Argos head office, Carrera 43A No. 1A Sur-143, Medellín (GlobalData profile, not official site)", "mx_phone": null, "mx_address": null, "email": null, "other": "Argos USA ('a Summit Materials Company'): 3015 Windward Plaza #300, Alpharetta, GA 30005, +1 678-368-4300 (PCA directory)", "near_tij": false, "_id": "cementos-argos-and-argos-usa"}, {"scope": "int", "cat": "Aditivos e impermeabilizantes", "name": "Sika (Sika Mexicana S.A. de C.V.)", "pais": "Suiza / México", "trato": "aelc", "prod": "Aditivos, impermeabilizantes, selladores, epóxicos", "normas": "ISO 9001:2015, ISO 14001:2015, ISO 45001:2018 (Sistema de Gestión Integral de Sika Mexicana)", "cumple": ["ISO 9001"], "web": "https://mex.sika.com", "contact_url": "https://mex.sika.com/es/contacto-sika-mexico.html", "phone": "+52 800 123 7452", "phone_label": "Sika Mexicana, línea nacional (sin costo)", "mx_phone": "+52 55 5395 4333", "mx_address": "Carretera Libre a Celaya Km 8.5, Fracc. Lomas de Balvanera, 76920 Corregidora, Qro.", "email": null, "other": "WhatsApp de asistencia técnica (enlace en la página de contacto); chat en línea; Calendly para agendar una llamada con un especialista; sección Distribuidores/Aplicadores", "near_tij": false, "_id": "sika-sika-mexicana-s-a-de-c-v"}, {"scope": "int", "cat": "Aditivos e impermeabilizantes", "name": "Mapei (Mapei de México S.A. de C.V.)", "pais": "Italia / México", "trato": "ue", "prod": "Adhesivos, morteros, impermeabilizantes", "normas": "Marcado CE (Reglamento UE 305/2011), EPD, homologación de bajas emisiones COV (EC1 Plus/Blauer Engel), contribución LEED/BREEAM. El sitio de México no menciona ISO 9001.", "cumple": ["Norma Europa", "ISO 9001"], "web": "https://www.mapei.com/mx/es-mx", "contact_url": "https://www.mapei.com/mx/es-mx/contactenos", "phone": "+52 800 696 2734", "phone_label": "Mapei México, línea nacional", "mx_phone": "+52 442 209 5022", "mx_address": "Av. Antea 1088, Piso 7, Jurica, Querétaro (el sitio da dos C.P.: 76000 y 76100). Plantas: Cancún, Q. Roo y Zimapán, Hgo.", "email": null, "other": "WhatsApp +52 1 442 207 5835 (https://wa.me/5214422075835); los correos están ocultos tras la protección de Cloudflare; formulario en área de registro", "near_tij": false, "_id": "mapei-mapei-de-m-xico-s-a-de-c-v"}, {"scope": "int", "cat": "Aditivos e impermeabilizantes", "name": "Master Builders Solutions (ahora parte de Sika)", "pais": "Suiza / México", "trato": "aelc", "prod": "Aditivos, impermeabilizantes, selladores, epóxicos", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://mbcc.sika.com/es-mx", "contact_url": "https://master-builders-solutions.com/en-us/contacts/", "phone": "+1 800 228 3318", "phone_label": "Atención a clientes EE.UU. (admixtures); soporte técnico +1 800 628 9990", "mx_phone": null, "mx_address": "Entidad en México: Master B Solutions Mexicana, S.A. de C.V. (página de contacto bloqueada para lectura; dirección no verificada)", "email": "admixturessupport@masterbuilders.com (EE.UU.)", "other": "Formulario de contacto; directorio de contactos locales en mbcc.sika.com/es-mx/contacto", "near_tij": false, "_id": "master-builders-solutions-ahora-parte-de-sika"}, {"scope": "int", "cat": "Tablaroca y aislamiento", "name": "USG (USG México, grupo Knauf)", "pais": "EE.UU. / México", "trato": "tmec", "prod": "Panel de yeso Tablaroca, compuestos, plafones", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.usg.com/es-MX", "contact_url": "https://www.usg.com/es-MX/contactanos", "phone": "+52 55 5261 6300", "phone_label": "USG México, CDMX", "mx_phone": "+52 55 5261 6300", "mx_address": "Av. Vasco de Quiroga 4800, Torre 1, Piso 5, Of. 501, Santa Fe, Cuajimalpa, 05348 CDMX", "email": null, "other": "Formulario https://cloud.usgmkt-latam.com/mexico-sitioweb ; localizador de distribuidores https://dondecomprarusglatam.com/ ; buscador de representantes", "near_tij": false, "_id": "usg-usg-m-xico-grupo-knauf"}, {"scope": "int", "cat": "Tablaroca y aislamiento", "name": "Saint-Gobain México", "pais": "Francia / México", "trato": "ue", "prod": "Yeso (Plaka), aislamiento, morteros (Cemix), vidrio", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.saint-gobain.com.mx", "contact_url": "https://www.saint-gobain.com.mx/node/2571", "phone": "+52 55 5279 1600", "phone_label": "Saint-Gobain Oficinas LATAM, CDMX", "mx_phone": "+52 664 625 4168 (Saint-Gobain Abrasivos, Tijuana); Gypsum SLP +52 444 824 0888; Impac 800 004 6722", "mx_address": "Calzada Legaria 549, Torre 1, Piso 14, Col. 10 de Abril, 11250 CDMX. Tijuana: Privada Bugambilias, 22370 Tijuana, B.C. (Abrasivos)", "email": "infocemix@cemix.com (Cemix, Monterrey; los demás correos están ocultos)", "other": "WhatsApp chatbot de Plaka (publicado como '+444 411 8208'); directorio por división (Gypsum/Placo, Glass, Cemix, Ecophon, GCP, Weber)", "near_tij": false, "_id": "saint-gobain-m-xico"}, {"scope": "int", "cat": "Tablaroca y aislamiento", "name": "Rockwool", "pais": "Dinamarca", "trato": "ue", "prod": "Lana mineral, aislamiento contra fuego", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.rockwool.com", "contact_url": "https://www.rockwool.com/group/contact/", "phone": "+45 46 56 03 00", "phone_label": "ROCKWOOL A/S, sede central, Hedehusene, Dinamarca", "mx_phone": null, "mx_address": "Sin oficina en México en el directorio oficial. Sede: Hovedgaden 584, DK-2640 Hedehusene", "email": null, "other": "Directorio de países; ROCKWOOL Technical Insulation EE.UU.: rti.rockwool.com", "near_tij": false, "_id": "rockwool"}, {"scope": "int", "cat": "Vidrio y cancelería", "name": "Guardian Glass", "pais": "EE.UU.", "trato": "tmec", "prod": "Vidrio float, control solar, laminado", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.guardianglass.com/mx/es", "contact_url": "https://www.guardianglass.com/us/en/who-we-are/help-and-contact/contact-us", "phone": "+1 855 584 5277", "phone_label": "Guardian Glass Norteamérica (1-855-58-GLASS)", "mx_phone": null, "mx_address": "Sede: 2300 Harmon Road, Auburn Hills, MI 48326, EE.UU. Sin dirección en México publicada.", "email": null, "other": "Formulario de contacto; programa de procesadores certificados SunGuard en México (Avant Glass, Prodigas, Innova Glass, Vitropanel)", "near_tij": false, "_id": "guardian-glass"}, {"scope": "int", "cat": "Vidrio y cancelería", "name": "AGC Glass", "pais": "Japón / Bélgica", "trato": "ue", "prod": "Vidrio arquitectónico", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.agc-glass.eu", "contact_url": "https://www.agc-glass.eu/en/about/contact-us", "phone": "+32 2 409 30 00", "phone_label": "AGC Glass Europe, Louvain-la-Neuve, Bélgica (AGC Inc. Tokio: +81 3 3218 5741)", "mx_phone": null, "mx_address": "Sin contacto en México publicado. Europa: Avenue Jean Monnet 4, 1348 Louvain-la-Neuve, Bélgica", "email": null, "other": "Contactos de prensa y compras en agc-glass.eu; sitio AGC YourGlass para México (sin datos de contacto)", "near_tij": false, "_id": "agc-glass"}, {"scope": "int", "cat": "Vidrio y cancelería", "name": "Reynaers Aluminium", "pais": "Bélgica", "trato": "ue", "prod": "Fachadas y ventanas de aluminio", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.reynaers.com", "contact_url": "https://www.reynaers.com/contact", "phone": "+32 15 308 500", "phone_label": "Reynaers Group, sede central, Duffel, Bélgica", "mx_phone": null, "mx_address": "Sin oficina en México. Norteamérica: Reynaers Inc., Charlotte, NC (info.n-a@reynaers.com)", "email": "info@reynaers.com", "other": "Directorio de oficinas en reynaers.com/contact", "near_tij": false, "_id": "reynaers-aluminium"}, {"scope": "int", "cat": "Recubrimientos y sanitarios", "name": "Porcelanosa México", "pais": "España / México", "trato": "ue", "prod": "Porcelanato, cerámica, baños", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.porcelanosa.com/mx/", "contact_url": "https://www.porcelanosa.com/mx/10-de-10/contacto/", "phone": "+52 55 5282 2000", "phone_label": "Showroom Masaryk, CDMX", "mx_phone": "+52 55 5282 2000 (Masaryk); Guadalajara +52 33 3615 3255; Puebla +52 222 622 7660", "mx_address": "Presidente Masaryk 410, Col. Polanco, 11560 CDMX (no hay showroom en Tijuana)", "email": "oficinas@porcelanosamexico.com", "other": "Buscador de tiendas; formulario de contacto", "near_tij": false, "_id": "porcelanosa-m-xico"}, {"scope": "int", "cat": "Recubrimientos y sanitarios", "name": "Roca México", "pais": "España / México", "trato": "ue", "prod": "Sanitarios, lavabos, grifería", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.mx.roca.com", "contact_url": "https://www.mx.roca.com/sobre-roca/contacto", "phone": null, "phone_label": "Atención al cliente Roca México, lun–vie 8–18 h (el sitio lo publica así; parece la clave lada 81 de Monterrey sin el +52, conviene confirmar)", "mx_phone": null, "mx_address": "Roca Bathroom Products Mexico SA, Av. La Grange 101, Col. Torres de Santo Domingo, San Nicolás de los Garza, N.L., C.P. 66440", "email": null, "other": "El sitio publica '+81 83139360' y '+81 83138157' (parecen lada 81 de Monterrey: +52 81 8313 9360). Confírmalo. Formularios general y para profesionales; localizador de distribuidores https://www.mx.roca.com/sobre-roca/distribuidores-mexico", "near_tij": false, "_id": "roca-m-xico"}, {"scope": "int", "cat": "Recubrimientos y sanitarios", "name": "Kohler (Kohler Latinoamérica)", "pais": "EE.UU.", "trato": "tmec", "prod": "Sanitarios, grifería", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://la.kohler.com/es", "contact_url": "https://la.kohler.com/es/contact-us-page", "phone": "+1 800 456 4537", "phone_label": "Centro de Atención Kohler (desde México se marca 001-800-456-4537), lun–vie 8–17 h (hora del Centro de EE.UU.)", "mx_phone": null, "mx_address": null, "email": "Latam.projects@kohler.com (cotización de proyectos)", "other": "Localizador de distribuidores https://la.kohler.com/es/store-listing ; Kohler Experience Center", "near_tij": false, "_id": "kohler-kohler-latinoam-rica"}, {"scope": "int", "cat": "Recubrimientos y sanitarios", "name": "TOTO (TOTO USA / TOTO México)", "pais": "Japón / México", "trato": "jp", "prod": "Sanitarios de bajo consumo; planta en México", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.totousa.com", "contact_url": "https://www.totousa.com/latin-america-dealers", "phone": "+1 770 282 8686", "phone_label": "TOTO U.S.A., Inc., Morrow, GA (internacional 001-770-282-8686)", "mx_phone": "+52 81 8288 2600 ext. 4 / +52 55 2300 7305", "mx_address": "TOTO México S.A. de C.V., Av. TOTO #1100, Parque Industrial Multiparque Aeropuerto, Ciénega de Flores, N.L., C.P. 65583", "email": null, "other": "Lista de distribuidores para Latinoamérica y el Caribe; atención a clientes EE.UU. +1 888 295 8134", "near_tij": false, "_id": "toto-toto-usa-toto-m-xico"}, {"scope": "int", "cat": "Instalaciones", "name": "Southwire (Southwire México)", "pais": "EE.UU. / México", "trato": "tmec", "prod": "Cable eléctrico; planta en Tecate, B.C.", "normas": "Productos con certificación ANCE conforme a las NOM (México)", "cumple": ["Norma México"], "web": "https://www.southwire.com", "contact_url": "https://www.southwire.com/locations", "phone": "+1 770 832 4529", "phone_label": "Southwire, corporativo Carrollton, GA", "mx_phone": "+52 665 521 1461 (planta Tecate, B.C.)", "mx_address": "Calle Nogal No. 405, Tecate, Baja California, C.P. 21430", "email": "CableTechSupport@southwire.com (soporte técnico de cables)", "other": "Customer Hub; localizador de plantas", "near_tij": true, "_id": "southwire-southwire-m-xico"}, {"scope": "int", "cat": "Instalaciones", "name": "Uponor (grupo GF)", "pais": "Finlandia / EE.UU.", "trato": "ue", "prod": "Tubería PEX, piso radiante", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.uponor.com", "contact_url": "https://www.uponor.com/en-us/customer-support", "phone": "+1 800 321 4739", "phone_label": "Uponor Norteamérica, Apple Valley, MN (atención a clientes +1 888 594 7726)", "mx_phone": null, "mx_address": "Sin contacto en México publicado. Norteamérica: 5925 148th Street West, Apple Valley, MN 55124", "email": "UScustomer-service@georgfischer.com", "other": "Buscador de representantes https://www.uponor.com/en-us/customer-support/find-a-rep ; dónde comprar", "near_tij": false, "_id": "uponor-grupo-gf"}, {"scope": "int", "cat": "Instalaciones", "name": "REHAU México", "pais": "Alemania / México", "trato": "ue", "prod": "PEX, perfiles PVC para ventana", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.rehau.com/mx-es", "contact_url": "https://www.rehau.com/mx-es/contactanos", "phone": "+52 461 618 8000", "phone_label": "REHAU México, Celaya / Apaseo el Grande, Gto.", "mx_phone": "+52 461 618 8000 (Celaya); +52 81 8121 0130 (Monterrey)", "mx_address": "Carretera Libre Celaya-Querétaro Km 8.5, Col. Rancho Nuevo, 38197 Apaseo el Grande, Gto.", "email": "marketing.mexico@rehau.com", "other": "Formulario de contacto", "near_tij": false, "_id": "rehau-m-xico"}, {"scope": "int", "cat": "Equipos", "name": "Otis (Elevadores Otis México)", "pais": "EE.UU. / México", "trato": "tmec", "prod": "Elevadores, escaleras eléctricas", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.otis.com/es/mx", "contact_url": "https://www.otis.com/es/mx/contactenos", "phone": "+52 800 712 5472", "phone_label": "OTISLINE, servicio 24 h (también 800 712 5473)", "mx_phone": "+52 55 2636 3000", "mx_address": "Av. Revolución No. 507, 3er piso, Col. San Pedro de los Pinos, 03800 CDMX", "email": "Gpotis.ventas@otis.com", "other": "WhatsApp +52 800 712 5473; Telemarketing y Modernizaciones 800 111 6847; Defensor del Cliente: defensordel.cliente@otis.com", "near_tij": false, "_id": "otis-elevadores-otis-m-xico"}, {"scope": "int", "cat": "Equipos", "name": "Schindler (Elevadores Schindler México)", "pais": "Suiza / México", "trato": "aelc", "prod": "Elevadores, escaleras eléctricas", "normas": "Certificados por la NOM-207-SCFI-2018", "cumple": ["Norma México"], "web": "https://www.schindler.mx/es", "contact_url": "https://www.schindler.mx/es/contacto.html", "phone": "+52 55 5080 1400", "phone_label": "Oficinas centrales, Naucalpan, Edo. Méx.", "mx_phone": "+52 55 5080 1400; emergencias 800 228 7300; centro de servicio Los Cabos +52 624 146 3516", "mx_address": "Camino a San Mateo No. 2, Fracc. Anexo Jardines de San Mateo, Naucalpan de Juárez, Edo. Méx., C.P. 53240", "email": "atencion_alcliente.mx@schindler.com", "other": "Formulario de contacto; centros de servicio (Puebla, Veracruz, Guadalajara, Monterrey, Cancún, Los Cabos, etc.)", "near_tij": false, "_id": "schindler-elevadores-schindler-m-xico"}, {"scope": "int", "cat": "Equipos", "name": "KONE México", "pais": "Finlandia / México", "trato": "ue", "prod": "Elevadores, escaleras eléctricas", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.kone.mx", "contact_url": "https://www.kone.mx/nosotros/contactenos/", "phone": "+52 55 1946 0100", "phone_label": "KONE México, CDMX (opción 0 y luego 4 para información; opciones 1 y 2 para emergencias 24 h)", "mx_phone": "+52 55 1946 0100", "mx_address": "Av. Revolución 756, piso 6, Col. Santa María Nonoalco, Benito Juárez, 03700 CDMX (no hay oficina en Baja California)", "email": "contacto@kone.com", "other": "Formulario de contacto (respuesta en 48 h hábiles); KONE Online", "near_tij": false, "_id": "kone-m-xico"}, {"scope": "int", "cat": "Equipos", "name": "Daikin México", "pais": "Japón / México", "trato": "jp", "prod": "Aire acondicionado, VRF, chillers", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://daikin.com.mx", "contact_url": "https://daikin.com.mx/contacto", "phone": "+52 55 5147 0148", "phone_label": "Daikin México, CDMX (opción 2 atención al cliente; opción 3 soporte técnico)", "mx_phone": "+52 55 5147 0148", "mx_address": "Av. de los Insurgentes Sur 1458, Int. P10, Col. Actipan, Benito Juárez, 03230 CDMX", "email": "servicio@daikin.com.mx", "other": "soporte.tecnico@daikin.com.mx; refacciones@daikin.com.mx; formulario; localizador de distribuidores https://daikin.com.mx/distribuidores", "near_tij": false, "_id": "daikin-m-xico"}, {"scope": "int", "cat": "Equipos", "name": "Carrier México", "pais": "EE.UU. / México", "trato": "tmec", "prod": "Aire acondicionado, chillers", "normas": "No publicadas en su sitio: pide ISO 9001 y certificado de norma por lote", "cumple": [], "web": "https://www.carrier.com.mx", "contact_url": "https://www.carrier.com.mx/soporte/", "phone": "+52 55 9126 0300", "phone_label": "Carrier México (se publica como '(01) 5591260300')", "mx_phone": "+52 55 9126 0300", "mx_address": "Corporativo global: 13995 Pasteur Blvd., Palm Beach Gardens, FL 33418. Dirección en México no publicada", "email": null, "other": "Distribuidores autorizados https://www.carrier.com.mx/donde-comprar/ ; soporte técnico", "near_tij": false, "_id": "carrier-m-xico"}, {"scope": "mx", "cat": "Concreto", "name": "CEMEX Concretos - Planta Otay (Tijuana)", "prod": "Cemento y concreto premezclado", "normas": null, "cumple": [], "web": "https://www.cemexmexico.com", "contact_url": "https://www.cemexmexico.com/contactanos", "phone": "+52 664 647 6700", "phone_label": "Teléfono", "address": "5 Sur 150, Cd. Industrial Garita de Otay, C.P. 22502, Tijuana, B.C.", "email": null, "whatsapp": null, "other": "Teléfono tomado de directorios (Guiatel, Cylex); confírmalo", "near_tij": true, "_id": "cemex-concretos-planta-otay-tijuana"}, {"scope": "mx", "cat": "Concreto", "name": "Holcim México - Planta Tijuana 1", "prod": "Cemento y concreto premezclado", "normas": null, "cumple": [], "web": "https://www.holcim.com.mx", "contact_url": "https://www.holcim.com.mx/contacto", "phone": "+52 664 622 6550", "phone_label": "Teléfono", "address": "Blvd. Simón Bolívar 18201, Fracc. Anexa Porvenir, C.P. 22225, Tijuana, B.C.", "email": null, "whatsapp": null, "other": null, "near_tij": true, "_id": "holcim-m-xico-planta-tijuana-1"}, {"scope": "mx", "cat": "Concreto", "name": "Holcim México - Planta Tijuana 2", "prod": "Cemento y concreto premezclado", "normas": null, "cumple": [], "web": "https://www.holcim.com.mx", "contact_url": "https://www.holcim.com.mx/contacto", "phone": "+52 664 207 2600", "phone_label": "Teléfono", "address": "Carretera Libre Tijuana-Ensenada Km 9 No. 114, Col. Tecolote, C.P. 22647, Tijuana, B.C.", "email": null, "whatsapp": null, "other": null, "near_tij": true, "_id": "holcim-m-xico-planta-tijuana-2"}, {"scope": "mx", "cat": "Concreto", "name": "Holcim México - Planta Tijuana 3", "prod": "Cemento y concreto premezclado", "normas": null, "cumple": [], "web": "https://www.holcim.com.mx", "contact_url": "https://www.holcim.com.mx/contacto", "phone": "+52 664 969 1300", "phone_label": "Teléfono", "address": "Camino Vecinal 26425, Col. El Refugio, C.P. 22253, Tijuana, B.C.", "email": null, "whatsapp": null, "other": null, "near_tij": true, "_id": "holcim-m-xico-planta-tijuana-3"}, {"scope": "mx", "cat": "Concreto", "name": "Holcim México - Sede Blvd. Insurgentes (Tijuana)", "prod": "Cemento y concreto premezclado", "normas": null, "cumple": [], "web": "https://www.holcim.com.mx", "contact_url": "https://www.holcim.com.mx/contacto", "phone": "+52 664 969 1300", "phone_label": "Teléfono", "address": "Blvd. Insurgentes 17289, Fracc. Anexa Porvenir, C.P. 22225, Tijuana, B.C.", "email": null, "whatsapp": null, "other": null, "near_tij": true, "_id": "holcim-m-xico-sede-blvd-insurgentes-tijuana"}, {"scope": "mx", "cat": "Concreto", "name": "PROCECO (Concretos Proceco) - Sucursal Tijuana", "prod": "Cemento y concreto premezclado", "normas": null, "cumple": [], "web": "https://www.concretosproceco.com", "contact_url": "https://www.concretosproceco.com", "phone": "+52 664 625 0043", "phone_label": "Teléfono", "address": "Insurgentes 18003, Col. Guaycura, C.P. 22215/22216, Tijuana, B.C.", "email": "ventas@proceco.com.mx", "whatsapp": null, "other": null, "near_tij": true, "_id": "proceco-concretos-proceco-sucursal-tijuana"}, {"scope": "mx", "cat": "Acero", "name": "Aceromex - Sucursal Tijuana", "prod": "Acero de refuerzo y estructural", "normas": "Dice contar con laboratorio acreditado y certificaciones, pero no las nombra; ISO sin verificar", "cumple": [], "web": "https://aceromex.com", "contact_url": "https://aceromex.com/en/contact/", "phone": "+52 664 626 8578", "phone_label": "Teléfono", "address": "Del Asfalto 19952, Col. Meseta del Chema, C.P. 22225, Tijuana, B.C.", "email": "sales@aceromex.com", "whatsapp": "+52 81 1215 8046", "other": null, "near_tij": true, "_id": "aceromex-sucursal-tijuana"}, {"scope": "mx", "cat": "Acero", "name": "Aceros y Perfiles DLux", "prod": "Acero de refuerzo y estructural", "normas": null, "cumple": [], "web": "https://acerosyperfilesdlux.com", "contact_url": "https://acerosyperfilesdlux.com", "phone": "+52 664 210 5433", "phone_label": "Teléfono", "address": "Av. Ley del Servicio Civil, Col. Ley del Servicio Civil, C.P. 22665, Tijuana, B.C.", "email": "distribuidoraavanza@hotmail.com", "whatsapp": "+52 664 334 4663", "other": "Usa correo Hotmail; confirma razón social y facturación antes de comprar", "near_tij": true, "_id": "aceros-y-perfiles-dlux"}, {"scope": "mx", "cat": "Acero", "name": "DEACERO", "prod": "Acero de refuerzo y estructural", "normas": null, "cumple": [], "web": "https://www.deacero.com", "contact_url": "https://www.deacero.com/contacto", "phone": "+52 800 831 5700", "phone_label": "Teléfono", "address": null, "email": null, "whatsapp": null, "other": "Línea nacional; en Tijuana surte por distribuidores", "near_tij": true, "_id": "deacero"}, {"scope": "mx", "cat": "Mampostería", "name": "BLOCKMEX Tijuana", "prod": "Block, agregados, tabique", "normas": "Menciona \"diversas certificaciones\" sin nombrarlas; NMX sin verificar", "cumple": ["Norma México"], "web": "https://www.blockmextijuana.com", "contact_url": "https://www.blockmextijuana.com/index.html", "phone": "+52 664 971 7116", "phone_label": "Teléfono", "address": "Libre Tijuana-Tecate Km 26.5 S/N, Milenio 2000, C.P. 22515, Tijuana, B.C.", "email": "ventastijuana@blockmex.com.mx", "whatsapp": null, "other": null, "near_tij": true, "_id": "blockmex-tijuana"}, {"scope": "mx", "cat": "Mampostería", "name": "Bloquera Ledesma", "prod": "Block, agregados, tabique", "normas": null, "cumple": [], "web": "https://bloqueraledesma.com", "contact_url": "https://bloqueraledesma.com", "phone": "+52 664 689 1423", "phone_label": "Teléfono", "address": "Blvd. Díaz Ordaz 4062, Col. La Ciénega Sur, Tijuana, B.C.", "email": null, "whatsapp": "+52 664 355 8303", "other": null, "near_tij": true, "_id": "bloquera-ledesma"}, {"scope": "mx", "cat": "Ferretería", "name": "The Home Depot Tijuana 2000 (#8854)", "prod": "Ferretería y materiales generales", "normas": null, "cumple": [], "web": "https://www.homedepot.com.mx", "contact_url": "https://pro.homedepot.com.mx/pro/estamos-para-ayudarte", "phone": "+52 664 969 1000", "phone_label": "Teléfono", "address": "Corredor Tijuana-Rosarito 2000 esq. Lázaro Cárdenas, Mz. 819, C.P. 22205, Tijuana, B.C.", "email": null, "whatsapp": null, "other": null, "near_tij": true, "_id": "the-home-depot-tijuana-2000-8854"}, {"scope": "mx", "cat": "Ferretería", "name": "The Home Depot Tijuana Soler (#1168)", "prod": "Ferretería y materiales generales", "normas": null, "cumple": [], "web": "https://www.homedepot.com.mx", "contact_url": "https://pro.homedepot.com.mx/pro/estamos-para-ayudarte", "phone": "+52 664 635 1600", "phone_label": "Teléfono", "address": "Braulio Maldonado 680, Fracc. El Soler, C.P. 22530, Tijuana, B.C.", "email": null, "whatsapp": null, "other": null, "near_tij": true, "_id": "the-home-depot-tijuana-soler-1168"}, {"scope": "mx", "cat": "Ferretería", "name": "The Home Depot Tijuana Santa Fe (#4038)", "prod": "Ferretería y materiales generales", "normas": null, "cumple": [], "web": "https://www.homedepot.com.mx", "contact_url": "https://pro.homedepot.com.mx/pro/estamos-para-ayudarte", "phone": "+52 664 635 5300", "phone_label": "Teléfono", "address": "El Rosario 7402, Col. Valparaíso Residencial, C.P. 22663, Tijuana, B.C.", "email": null, "whatsapp": null, "other": null, "near_tij": true, "_id": "the-home-depot-tijuana-santa-fe-4038"}, {"scope": "mx", "cat": "Ferretería", "name": "The Home Depot Tijuana Vía Rápida (#8706)", "prod": "Ferretería y materiales generales", "normas": null, "cumple": [], "web": "https://www.homedepot.com.mx", "contact_url": "https://pro.homedepot.com.mx/pro/estamos-para-ayudarte", "phone": "+52 664 608 8000", "phone_label": "Teléfono", "address": "Vía Rápida Pte. esq. Lázaro Cárdenas, Col. Los Santos, Del. La Mesa, C.P. 22430, Tijuana, B.C.", "email": null, "whatsapp": null, "other": null, "near_tij": true, "_id": "the-home-depot-tijuana-v-a-r-pida-8706"}], "cambios": [], "meta": {"last_run": 1792188000000, "tc": 18.24, "tc_date": "2026-10-12"}};
+const DATA_URL="precios.json";
+function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return v===undefined?null:false}}
+function loadData(d){
+  const old=store("po_prev_prices")||{};
+  PRE=d.precios;PROV=d.proveedores;META=d.meta||null;
+  const local=[];
+  PRE.forEach(p=>{const o=old[p._id];if(o&&(o.min!==p.min||o.max!==p.max)){const before=(o.min+o.max)/2,now=(p.min+p.max)/2;local.push({ts:p.updated||Date.now(),mat:p.mat+(p.spec?" · "+p.spec:""),cat:p.cat,unit:p.unit,cur:p.cur,old_min:o.min,old_max:o.max,new_min:p.min,new_max:p.max,pct:before?(now-before)/before*100:0,src_u:p.src_u});p.prev_min=p.prev_min??o.min;p.prev_max=p.prev_max??o.max}});
+  CHG=[...(d.cambios||[]),...local].sort((x,y)=>y.ts-x.ts);
+  const snapP={};PRE.forEach(p=>snapP[p._id]={min:p.min,max:p.max});store("po_prev_prices",snapP);
+  if(local.length&&tab!=="chg"){$("#newchg-t").textContent=`${local.length} precio${local.length>1?"s cambiaron":" cambió"} con la base nueva.`;$("#newchg").hidden=false}
+  loaded=true;fillSrc();render();
+  if(META){$("#stamp").textContent="Datos al "+new Date(META.last_run).toLocaleDateString("es-MX",{day:"numeric",month:"short",year:"numeric"})}
+}
+mine=store("po_mine")||[];
+$("#f-date").value=new Date().toISOString().slice(0,10);
+$("#addform").addEventListener("submit",e=>{
+  e.preventDefault();
+  const m={_id:"q"+Date.now().toString(36),mat:$("#f-mat").value.trim(),prov:$("#f-prov").value.trim(),city:$("#f-city").value.trim(),price:parseFloat($("#f-price").value),cur:$("#f-cur").value,unit:$("#f-unit").value.trim(),date:$("#f-date").value,notes:$("#f-notes").value.trim(),created:Date.now()};
+  if(!m.mat||!m.unit||isNaN(m.price))return;
+  mine.unshift(m);
+  if(store("po_mine",mine)){["#f-mat","#f-prov","#f-price","#f-notes"].forEach(id=>$(id).value="");$("#mine-status").textContent="Guardada en este equipo."}
+  else $("#mine-status").textContent="El navegador no permite guardar aquí (modo privado o archivo bloqueado). Usa \"Respaldar cotizaciones\" para no perderla.";
+  render();
+});
+let pendingDel=null;
+$("#list-mine").addEventListener("click",e=>{
+  const b=e.target.closest("[data-del]");if(!b)return;
+  if(pendingDel!==b.dataset.del){pendingDel=b.dataset.del;b.textContent="Toca otra vez para borrar";return}
+  mine=mine.filter(m=>m._id!==b.dataset.del);store("po_mine",mine);pendingDel=null;render();
+});
+$("#exp").onclick=()=>{
+  const blob=new Blob([JSON.stringify({tipo:"cotizaciones-precios-obra",fecha:new Date().toISOString(),cotizaciones:mine},null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cotizaciones-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();
+  $("#mine-status").textContent="Respaldo descargado. Cárgalo en tu otro equipo con \"Cargar respaldo\".";
+};
+$("#imp").onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{const j=JSON.parse(await f.text());const list=j.cotizaciones||j.precios&&null;
+    if(j.precios&&j.proveedores){loadData(j);$("#mine-status").textContent="";alertBase();return}
+    if(!Array.isArray(list))throw 0;
+    const ids=new Set(mine.map(m=>m._id));let n=0;list.forEach(m=>{if(m&&m._id&&!ids.has(m._id)){mine.push(m);n++}});
+    mine.sort((a,b)=>(b.created||0)-(a.created||0));store("po_mine",mine);render();
+    $("#mine-status").textContent=`Se agregaron ${n} cotización${n===1?"":"es"} del respaldo.`;
+  }catch(err){$("#mine-status").textContent="Ese archivo no es un respaldo válido de Precios de Obra."}
+  e.target.value="";
+};
+function alertBase(){$("#chg-note").textContent="Base de precios cargada desde archivo."}
+(async()=>{
+  if(DATA_URL){try{const r=await fetch(DATA_URL,{cache:"no-store"});if(r.ok){const d=await r.json();store("po_last_data",d);loadData(d);return}}catch(e){}
+    const cached=store("po_last_data");if(cached){loadData(cached);return}}
+  loadData(DATA);
+})();
+setTab(tab);render();
+</script>
+<script>if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+</body>
+</html>
