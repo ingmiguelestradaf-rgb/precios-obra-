@@ -138,6 +138,27 @@ form.add{display:grid;gap:10px}
 </style>
 
 <style>body{margin:0}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}</style>
+<style>
+/* mano de obra y precio unitario */
+.mo-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.mo-grid{grid-template-columns:minmax(0,1fr)}}
+.tbl-wrap{overflow-x:auto}
+table.mo{width:100%;border-collapse:collapse;font-size:13.5px}
+table.mo th{font:600 11px var(--f-body);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);text-align:left;padding:6px 6px;border-bottom:1px solid var(--line)}
+table.mo td{padding:6px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.mo td.n,table.mo th.n{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+table.mo input{width:86px;padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--fg);font:13px var(--f-mono);text-align:right}
+table.mo tr.grp td{font:600 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--sunk)}
+table.mo tr.sum td{font-weight:600}
+table.mo tr.tot td{font-weight:700;font-size:15px;border-bottom:0;padding-top:10px}
+details.params{border:1px solid var(--line);border-radius:5px;padding:8px 10px;background:var(--bg)}
+details.params summary{cursor:pointer;font-size:13.5px;font-weight:600}
+details.params .fields{margin-top:10px;grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:520px){details.params .fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.kpi b{display:block;font:600 22px var(--f-mono);color:var(--fg)}
+.small{font-size:12px;color:var(--muted)}
+</style>
 </head>
 <body>
 <header class="band">
@@ -156,6 +177,7 @@ form.add{display:grid;gap:10px}
       <button role="tab" id="t-chg" aria-selected="false" data-p="chg">Cambios<span class="n" id="n-chg"></span></button>
       <button role="tab" id="t-mine" aria-selected="false" data-p="mine">Mis cotizaciones<span class="n" id="n-mine"></span></button>
       <button role="tab" id="t-calc" aria-selected="false" data-p="calc">Costo puesto</button>
+      <button role="tab" id="t-mo" aria-selected="false" data-p="mo">Mano de obra y P.U.</button>
     </nav>
   </div>
 </header>
@@ -252,6 +274,40 @@ form.add{display:grid;gap:10px}
         <p class="note">El IVA de importación (16 %) suele ser acreditable si facturas como empresa; por eso se compara sin IVA. Confirma con tu agente aduanal la fracción arancelaria, el padrón de importadores y si aplica padrón sectorial o aviso de siderúrgicos.</p>
       </div>
     </div>
+  </section>
+  <section class="panel" id="p-mo" role="tabpanel" aria-labelledby="t-mo" hidden>
+    <p class="note">Salario real con Factor de Salario Real (IMSS, Infonavit e ISN de B.C. 2026) y precio unitario rápido: mano de obra por cuadrilla y rendimiento, materiales de la base con ajuste a Tijuana, equipo e indirectos. Los salarios y rendimientos son de referencia: cambia los valores por los de tu obra y se guardan en este equipo.</p>
+    <div class="mo-grid">
+      <div class="card">
+        <h2 class="section-h">Salario real por categoría</h2>
+        <div class="kpi" id="mo-kpi"></div>
+        <details class="params"><summary>Parámetros del FSR</summary>
+          <div class="fields" id="mo-params"></div>
+          <p class="small" id="mo-pnote"></p>
+        </details>
+        <div class="tbl-wrap"><table class="mo" id="mo-cat"></table></div>
+        <div class="toolbar"><button class="btn ghost" id="mo-reset" type="button">Volver a salarios de referencia</button></div>
+        <h3 class="sub-h">Cuadrillas</h3>
+        <div class="tbl-wrap"><table class="mo" id="mo-cuad"></table></div>
+      </div>
+      <div class="card">
+        <h2 class="section-h">Precio unitario</h2>
+        <div class="fields">
+          <label class="field full">Concepto<select id="pu-con"></select></label>
+          <label class="field">Rendimiento por jornada<input id="pu-rend" type="number" step="0.1" inputmode="decimal"></label>
+          <label class="field">Ajuste materiales a Tijuana (%)<input id="pu-reg" type="number" step="1" inputmode="decimal"></label>
+          <label class="field">Indirectos (%)<input id="pu-ind" type="number" step="0.5" value="12" inputmode="decimal"></label>
+          <label class="field">Financiamiento (%)<input id="pu-fin" type="number" step="0.1" value="1" inputmode="decimal"></label>
+          <label class="field">Utilidad (%)<input id="pu-uti" type="number" step="0.5" value="10" inputmode="decimal"></label>
+          <label class="field">IVA<select id="pu-iva"><option value="8">8 % región fronteriza</option><option value="16">16 %</option></select></label>
+        </div>
+        <p class="small" id="pu-hint"></p>
+        <div class="tbl-wrap"><table class="mo" id="pu-out"></table></div>
+        <div class="toolbar"><button class="btn" id="pu-csv" type="button">Descargar análisis (CSV)</button><button class="btn" id="pu-all" type="button">Descargar tabulador completo (CSV)</button></div>
+        <p class="small">IVA 8 % solo si estás inscrito en el estímulo fiscal de la región fronteriza norte; si no, usa 16 %. Herramienta menor: 3 % de la mano de obra.</p>
+      </div>
+    </div>
+    <ul class="sources" id="mo-src"></ul>
   </section>
 </main>
 
@@ -367,7 +423,7 @@ function renderLive(q){
 }
 function setTab(t){
   tab=t;document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.p===t));
-  ["mx","int","chg","mine","calc"].forEach(p=>$("#p-"+p).hidden=p!==t);
+  ["mx","int","chg","mine","calc","mo"].forEach(p=>$("#p-"+p).hidden=p!==t);
   try{localStorage.setItem("po_tab",t)}catch(e){}
   if(t==="chg"){try{localStorage.setItem("po_seen",String(Date.now()))}catch(e){};$("#newchg").hidden=true}
 }
@@ -421,7 +477,7 @@ function loadData(d){
   CHG=[...(d.cambios||[]),...local].sort((x,y)=>y.ts-x.ts);
   const snapP={};PRE.forEach(p=>snapP[p._id]={min:p.min,max:p.max});store("po_prev_prices",snapP);
   if(local.length&&tab!=="chg"){$("#newchg-t").textContent=`${local.length} precio${local.length>1?"s cambiaron":" cambió"} con la base nueva.`;$("#newchg").hidden=false}
-  loaded=true;fillSrc();render();
+  loaded=true;fillSrc();render();if(window.moRender)moRender();
   if(META){$("#stamp").textContent="Datos al "+new Date(META.last_run).toLocaleDateString("es-MX",{day:"numeric",month:"short",year:"numeric"})}
 }
 mine=store("po_mine")||[];
@@ -464,6 +520,92 @@ function alertBase(){$("#chg-note").textContent="Base de precios cargada desde a
   loadData(DATA);
 })();
 setTab(tab);render();
+</script>
+<script>
+/* mano de obra, FSR y precio unitario */
+(function(){
+let MO=null;
+const st=(k,v)=>{try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v));}catch(e){return null}};
+let SD=st("po_sd")||{}, PAR=st("po_fsr")||{};
+const P=[["aguinaldo_dias","Aguinaldo (días)"],["vacaciones_dias","Vacaciones (días)"],["prima_vacacional","Prima vacacional (fracción)"],["festivos","Festivos LFT"],["dias_costumbre","Días de costumbre"],["dias_clima","Días perdidos por clima"],["riesgo_trabajo","Prima riesgo de trabajo (%)"],["isn","ISN B.C. (%)"],["infonavit","Infonavit (%)"]];
+const par=k=>{if(PAR[k]!=null&&PAR[k]!=="")return +PAR[k];const f=MO.fsr;return k in f.imss?f.imss[k]:f[k]};
+const sdOf=c=>SD[c.id]!=null?+SD[c.id]:Math.round((c.sd_ref_min+c.sd_ref_max)/2);
+function fsr(sd){
+  const f=MO.fsr,I=f.imss,uma=MO.meta.uma,sm=MO.meta.sm_zlfn;
+  const ag=par("aguinaldo_dias"),va=par("vacaciones_dias"),pv=par("prima_vacacional");
+  const Tp=365+ag+va*pv, Tl=365-f.domingos-va-par("festivos")-par("dias_costumbre")-par("dias_clima");
+  const sbc=Math.min(sd*Tp/365,25*uma), ratio=sbc/uma;
+  let ceav=I.ceav_2026[I.ceav_2026.length-1][1];
+  if(sd<=sm*1.0001)ceav=I.ceav_2026[0][1];else for(const [lim,p] of I.ceav_2026.slice(1))if(ratio<=lim){ceav=p;break}
+  const pct=par("riesgo_trabajo")+I.prestaciones_dinero+I.gastos_medicos_pens+I.invalidez_vida+I.guarderias+I.retiro+ceav+par("infonavit");
+  const dia=sbc*pct/100+uma*I.em_cuota_fija/100+Math.max(0,sbc-3*uma)*I.em_excedente/100;
+  const rem=sd*Tp, ps=(dia*365+rem*par("isn")/100)/rem, F=Tp/Tl*(1+ps);
+  return {F,Tp,Tl,ps,sbc,ceav,real:sd*F};
+}
+const catMap=()=>Object.fromEntries(MO.categorias.map(c=>[c.id,c]));
+function cuadCost(id){const q=MO.cuadrillas.find(x=>x.id===id),K=catMap();return q.integrantes.reduce((a,i)=>a+i.cant*fsr(sdOf(K[i.cat])).real,0)}
+const priceOf=id=>{const p=(typeof PRE!=="undefined"?PRE:[]).find(x=>x._id===id);return p?{p,v:(p.min+p.max)/2}:null};
+const eqOf=id=>{const e=MO.equipo.find(x=>x.id===id);return e?{e,v:(e.min+e.max)/2}:null};
+const f2=(n,d=2)=>Number(n).toLocaleString("es-MX",{minimumFractionDigits:d,maximumFractionDigits:d});
+function renderParams(){
+  $("#mo-params").innerHTML=P.map(([k,l])=>`<label class="field">${l}<input data-par="${k}" type="number" step="any" value="${par(k)}"></label>`).join("");
+  $("#mo-pnote").textContent=MO.fsr.nota_dias+" "+MO.fsr.imss.nota;
+}
+function renderCat(){
+  const rows=MO.categorias.map(c=>{const sd=sdOf(c),r=fsr(sd);return `<tr><td>${esc(c.nombre)}<div class="small">Ref. $${f2(c.sd_ref_min,0)}–$${f2(c.sd_ref_max,0)} · mín. legal $${f2(c.sd_min_legal)}</div></td>
+   <td class="n"><input data-sd="${c.id}" type="number" step="10" value="${sd}" aria-label="Salario diario ${esc(c.nombre)}"></td><td class="n">${f2(r.F,4)}</td><td class="n">$${f2(r.real)}</td></tr>`}).join("");
+  $("#mo-cat").innerHTML=`<tr><th>Categoría</th><th class="n">Salario diario</th><th class="n">FSR</th><th class="n">Salario real / jornada</th></tr>`+rows;
+  const r=fsr(sdOf(MO.categorias.find(c=>c.id==="of-albanil")));
+  $("#mo-kpi").innerHTML=`<div><b>${f2(r.F,3)}</b>FSR oficial albañil</div><div><b>${r.Tl}</b>días laborables/año</div><div><b>${f2(r.Tp,1)}</b>días pagados/año</div><div><b>${f2(r.ceav,3)} %</b>CEAV patronal</div>`;
+  $("#mo-cuad").innerHTML=`<tr><th>Cuadrilla</th><th class="n">Costo / jornada</th></tr>`+MO.cuadrillas.map(q=>`<tr><td>${esc(q.nombre)}</td><td class="n">$${f2(cuadCost(q.id))}</td></tr>`).join("");
+}
+function fillCon(){
+  const cur=$("#pu-con").value, g={};MO.rendimientos.forEach(r=>(g[r.partida]=g[r.partida]||[]).push(r));
+  $("#pu-con").innerHTML=Object.entries(g).map(([k,a])=>`<optgroup label="${esc(k)}">${a.map(r=>`<option value="${r.id}">${esc(r.concepto)} (${esc(r.unidad)})</option>`).join("")}</optgroup>`).join("");
+  $("#pu-con").value=cur||MO.rendimientos[0].id;
+}
+function pu(r,rend,reg){
+  const lines=[],mo=cuadCost(r.cuadrilla)/rend;
+  r.materiales.forEach(m=>{const x=priceOf(m.id);const v=x?x.v*(1+reg/100):0;lines.push({g:"Materiales",d:x?`${x.p.mat} ${x.p.spec}`:m.id,u:x?x.p.unit:"",c:m.cant,p:v,i:m.cant*v})});
+  const q=MO.cuadrillas.find(x=>x.id===r.cuadrilla);
+  lines.push({g:"Mano de obra",d:`${q.nombre} ÷ ${f2(rend,2)} ${r.unidad}/jor`,u:"jor",c:1/rend,p:cuadCost(r.cuadrilla),i:mo});
+  lines.push({g:"Herramienta y equipo",d:"Herramienta menor (3 % de M.O.)",u:"%",c:0.03,p:mo,i:mo*0.03});
+  r.equipo.forEach(e=>{const x=eqOf(e.id);lines.push({g:"Herramienta y equipo",d:x.e.nombre,u:x.e.unidad,c:e.cant,p:x.v,i:e.cant*x.v})});
+  const cd=lines.reduce((a,l)=>a+l.i,0);return {lines,cd,mo};
+}
+function renderPU(){
+  const r=MO.rendimientos.find(x=>x.id===$("#pu-con").value);if(!r)return;
+  if(!$("#pu-rend").value||$("#pu-rend").dataset.for!==r.id){$("#pu-rend").value=+((r.rend_min+r.rend_max)/2).toFixed(2);$("#pu-rend").dataset.for=r.id}
+  const v=id=>parseFloat($(id).value)||0, rend=v("#pu-rend")||1, reg=v("#pu-reg");
+  const {lines,cd}=pu(r,rend,reg);
+  const ind=cd*v("#pu-ind")/100, fin=(cd+ind)*v("#pu-fin")/100, uti=(cd+ind+fin)*v("#pu-uti")/100, pu0=cd+ind+fin+uti, iva=pu0*v("#pu-iva")/100;
+  let g="",h=`<tr><th>Insumo</th><th class="n">Cant.</th><th class="n">Precio</th><th class="n">Importe</th></tr>`;
+  lines.forEach(l=>{if(l.g!==g){g=l.g;h+=`<tr class="grp"><td colspan="4">${g}</td></tr>`}h+=`<tr><td>${esc(l.d)}<div class="small">${esc(l.u)}</div></td><td class="n">${f2(l.c,4)}</td><td class="n">$${f2(l.p)}</td><td class="n">$${f2(l.i)}</td></tr>`});
+  const S=(a,b,c="sum")=>`<tr class="${c}"><td colspan="3">${a}</td><td class="n">$${f2(b)}</td></tr>`;
+  h+=S("Costo directo",cd)+S(`Indirectos ${v("#pu-ind")} %`,ind,"")+S(`Financiamiento ${v("#pu-fin")} %`,fin,"")+S(`Utilidad ${v("#pu-uti")} %`,uti,"")+S(`Precio unitario sin IVA / ${esc(r.unidad)}`,pu0,"tot")+S(`Con IVA ${v("#pu-iva")} %`,pu0+iva);
+  $("#pu-out").innerHTML=h;
+  $("#pu-hint").textContent=`Rango de rendimiento de referencia: ${r.rend_min}–${r.rend_max} ${r.unidad}/jornada. ${r.materiales.length?"":"Este concepto aún no trae materiales en la base: agrégalos en tu presupuesto. "}${r.nota}`;
+  window._pu={r,lines,cd,ind,fin,uti,pu0,iva};
+}
+function csv(rows){return rows.map(r=>r.map(x=>{x=String(x??"");return /[",\n]/.test(x)?`"${x.replace(/"/g,'""')}"`:x}).join(",")).join("\n")}
+function dl(name,text){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+text],{type:"text/csv"}));a.download=name;document.body.appendChild(a);a.click();a.remove()}
+window.moRender=function(){if(!MO)return;renderParams();renderCat();fillCon();renderPU();
+  $("#mo-src").innerHTML="<li><b>Fuentes</b></li>"+MO.meta.fuentes.map(s=>`<li>${lnk(s.url,s.titulo)}</li>`).join("")+`<li>Datos de mano de obra al ${esc(MO.meta.fecha)}</li>`};
+document.addEventListener("input",e=>{const t=e.target;
+  if(t.dataset.sd){SD[t.dataset.sd]=t.value;st("po_sd",SD);const keep=t.dataset.sd;renderCat();const n=document.querySelector(`[data-sd="${keep}"]`);if(n){n.focus();n.setSelectionRange?.(n.value.length,n.value.length)}renderPU()}
+  else if(t.dataset.par){PAR[t.dataset.par]=t.value;st("po_fsr",PAR);renderCat();renderPU()}
+  else if(t.closest&&t.closest("#p-mo .fields")&&t.id&&t.id.startsWith("pu-"))renderPU();});
+$("#pu-con").addEventListener("change",()=>{$("#pu-rend").value="";renderPU()});
+$("#pu-iva").addEventListener("change",renderPU);
+$("#mo-reset").onclick=()=>{SD={};PAR={};st("po_sd",SD);st("po_fsr",PAR);moRender()};
+$("#pu-csv").onclick=()=>{const x=window._pu;if(!x)return;dl(`PU-${x.r.id}.csv`,csv([["Concepto",x.r.concepto,"Unidad",x.r.unidad],[],["Grupo","Insumo","Unidad","Cantidad","Precio","Importe"],...x.lines.map(l=>[l.g,l.d,l.u,l.c.toFixed(5),l.p.toFixed(2),l.i.toFixed(2)]),[],["","Costo directo","","","",x.cd.toFixed(2)],["","Indirectos","","","",x.ind.toFixed(2)],["","Financiamiento","","","",x.fin.toFixed(2)],["","Utilidad","","","",x.uti.toFixed(2)],["","P.U. sin IVA","","","",x.pu0.toFixed(2)],["","IVA","","","",x.iva.toFixed(2)]]))};
+$("#pu-all").onclick=()=>{const v=id=>parseFloat($(id).value)||0,reg=v("#pu-reg"),k=(1+v("#pu-ind")/100)*(1+v("#pu-fin")/100)*(1+v("#pu-uti")/100);
+  dl("tabulador-precios-unitarios.csv",csv([["Partida","Concepto","Unidad","Rendimiento/jor","Materiales","Mano de obra","Herr. y equipo","Costo directo","P.U. sin IVA"],...MO.rendimientos.map(r=>{const rend=(r.rend_min+r.rend_max)/2,{lines,cd}=pu(r,rend,reg),s=g=>lines.filter(l=>l.g===g).reduce((a,l)=>a+l.i,0);return [r.partida,r.concepto,r.unidad,rend,s("Materiales").toFixed(2),s("Mano de obra").toFixed(2),s("Herramienta y equipo").toFixed(2),cd.toFixed(2),(cd*k).toFixed(2)]})]))};
+(async()=>{try{const r=await fetch("mano-obra.json",{cache:"no-store"});if(r.ok){MO=await r.json();st("po_mo",MO)}}catch(e){}
+  if(!MO)MO=st("po_mo");if(!MO){$("#mo-cat").innerHTML='<tr><td>No se pudo cargar mano-obra.json. Abre la app con conexión una vez.</td></tr>';return}
+  if(!$("#pu-reg").value)$("#pu-reg").value=MO.factor_regional.tijuana;
+  const it=MO.indirectos_tipicos;moRender();})();
+})();
 </script>
 <script>if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </body>
